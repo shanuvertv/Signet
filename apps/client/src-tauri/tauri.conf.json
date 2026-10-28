@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Signet",
+  "version": "0.1.0",
+  "identifier": "app.signet.mail",
+  "build": {
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; font-src 'self' data:; frame-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'none'; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis",
+      "msi"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "publisher": "Signet",
+    "copyright": "Signet",
+    "category": "Productivity",
+    "shortDescription": "Mail client for a shared sales inbox",
+    "longDescription": "Signet - an Outlook-style POP3/IMAP/SMTP mail client for a team sharing one inbox.",
+    "windows": {
+      "wix": {
+        "upgradeCode": "0775ec9e-2dfa-5b72-8da4-44fd275f2829"
+      }
+    }
+  }
+}

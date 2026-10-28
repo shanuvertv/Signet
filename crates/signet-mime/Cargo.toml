@@ -1,0 +1,17 @@
+[package]
+name = "signet-mime"
+description = "MIME parsing, building and HTML sanitization for Signet"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+mail-parser.workspace = true
+mail-builder.workspace = true
+ammonia.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

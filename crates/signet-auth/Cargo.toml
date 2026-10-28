@@ -1,0 +1,26 @@
+[package]
+name = "signet-auth"
+description = "Platform keystore-backed credential vault for Signet"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+
+# `v1` is keyring 4's API gate; on Windows it selects the Credential Manager store.
+[target.'cfg(windows)'.dependencies]
+keyring = { version = "4", features = ["v1"] }
+
+# keyring 4 ships an Android store backed by the platform Keystore, which would remove the
+# hand-written JNI plugin this crate's docs originally assumed. UNVERIFIED: not yet built for an
+# Android target, and `v1` also pulls the secret-service store, which may not cross-compile.
+# Confirm in the Phase 6 spike before relying on it.
+[target.'cfg(target_os = "android")'.dependencies]
+keyring = { version = "4", features = ["v1", "android-native-keyring-store"] }
+
+[lints]
+workspace = true

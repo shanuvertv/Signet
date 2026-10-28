@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  check:
+    name: fmt, clippy, test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo fmt --all -- --check
+
+      - run: cargo clippy --workspace --all-targets
+
+      # Mailpit gives the live POP3 tests a server we did not write. Without it they self-skip,
+      # which would quietly hollow out the suite.
+      - name: Start Mailpit
+        shell: bash
+        run: |
+          curl -sSL -o mailpit.zip \
+            https://github.com/axllent/mailpit/releases/latest/download/mailpit-windows-amd64.zip
+          unzip -q mailpit.zip
+          printf 'signet:spike\n' > pop3-auth.txt
+          ./mailpit.exe --pop3-auth-file pop3-auth.txt \
+            --smtp-auth-accept-any --smtp-auth-allow-insecure \
+            --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025 --pop3 127.0.0.1:1110 &
+          sleep 5
+          node tools/seed-mailpit.mjs
+
+      # GreenMail gives the IMAP suite a real server, as Mailpit does for POP3/SMTP.
+      - name: Start GreenMail
+        shell: bash
+        run: |
+          curl -sSL -o greenmail.jar             https://repo1.maven.org/maven2/com/icegreen/greenmail-standalone/2.1.0/greenmail-standalone-2.1.0.jar
+          java -Dgreenmail.setup.test.all                -Dgreenmail.users=signet:spike@example.com                -jar greenmail.jar &
+          sleep 10
+          node tools/seed-greenmail.mjs
+
+      - name: Test
+        env:
+          SIGNET_TEST_POP3_HOST: 127.0.0.1
+          SIGNET_TEST_IMAP_HOST: 127.0.0.1
+        # Live-server tests share one mailbox, so they must not race each other.
+        run: cargo test --workspace -- --test-threads=1
+
+      # The desktop app is part of the workspace, so a broken UI shell fails CI like anything else.
+      - name: Build the desktop app
+        run: cargo build -p signet-app
+
+  android:
+    name: android cross-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r28
+
+      - run: cargo install cargo-ndk
+
+      # Proves the native dependencies (bundled SQLite, ring, the platform verifier) build for
+      # Android. Running on a device is a manual gate; see docs/testing.md.
+      - name: Cross-build core crates
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+        run: cargo ndk -t arm64-v8a build -p signet-store -p signet-net -p signet-sync -p signet-auth

@@ -1,0 +1,77 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/client/src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "UNLICENSED"
+authors = ["Signet contributors"]
+repository = "https://github.com/shanuvertv/Signet"
+
+[workspace.dependencies]
+# --- internal ---
+signet-net = { path = "crates/signet-net" }
+signet-mime = { path = "crates/signet-mime" }
+signet-store = { path = "crates/signet-store" }
+signet-sync = { path = "crates/signet-sync" }
+signet-auth = { path = "crates/signet-auth" }
+signet-core = { path = "crates/signet-core" }
+
+# --- runtime / io ---
+tokio = { version = "1.53", features = [
+    "rt-multi-thread",
+    "net",
+    "io-util",
+    "time",
+    "macros",
+    "fs",
+    "sync",
+] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["tls12", "ring"] }
+rustls = { version = "0.23", default-features = false, features = ["std", "tls12", "ring"] }
+rustls-platform-verifier = "0.7"
+
+# --- mail ---
+lettre = { version = "0.11", default-features = false, features = [
+    "tokio1",
+    "tokio1-rustls",
+    "smtp-transport",
+    "builder",
+    "ring",
+    "rustls-platform-verifier",
+] }
+async-imap = { version = "0.11", default-features = false, features = ["runtime-tokio"] }
+futures = "0.3"
+mail-parser = "0.11"
+mail-builder = "0.5"
+
+# --- storage ---
+rusqlite = { version = "0.40", features = ["bundled"] }
+
+# --- misc ---
+ammonia = "4"
+anyhow = "1"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+base64 = "0.23"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+todo = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

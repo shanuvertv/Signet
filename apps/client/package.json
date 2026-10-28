@@ -1,0 +1,17 @@
+{
+  "name": "signet-client",
+  "version": "1.0.0",
+  "description": "Frontend for Signet, with layout regression tests that run in a real browser.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  },
+  "private": true
+}

@@ -1,0 +1,32 @@
+[package]
+name = "signet-app"
+description = "Signet desktop and mobile client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "signet_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+signet-core.workspace = true
+signet-store.workspace = true
+signet-sync.workspace = true
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tauri-plugin-notification = "2.3.3"
+
+[lints]
+workspace = true

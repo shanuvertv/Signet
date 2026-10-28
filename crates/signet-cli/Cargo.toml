@@ -1,0 +1,27 @@
+[package]
+name = "signet-cli"
+description = "Headless driver and debugging tool for Signet"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "signet"
+path = "src/main.rs"
+
+[dependencies]
+signet-net.workspace = true
+signet-core.workspace = true
+signet-store.workspace = true
+signet-sync.workspace = true
+signet-auth.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[lints]
+workspace = true

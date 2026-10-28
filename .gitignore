@@ -1,0 +1,27 @@
+/target
+target-bundle/
+**/*.rs.bk
+Cargo.lock.orig
+
+# Tauri. Note apps/client/dist/ is NOT ignored: there is no bundler in this project, so those
+# three files are the frontend source itself rather than build output.
+apps/client/node_modules/
+apps/client/test-results/
+apps/client/src-tauri/target/
+apps/client/src-tauri/gen/
+
+# Secrets and signing material - never commit
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+updater-private.key
+.env
+.env.*
+
+# Local test artefacts
+/scratch
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

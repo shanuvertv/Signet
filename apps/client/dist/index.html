@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Signet</title>
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <!-- Icons: Fluent UI System Icons, 20px Regular (MIT, Microsoft), inlined so no window has to
+         fetch them and every icon shares one weight. Use as <svg class="ic"><use href="#i-name">. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<symbol id="i-mail" viewBox="0 0 20 20"><!-- mail --><path d="M15.5 4A2.5 2.5 0 0 1 18 6.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 14.5v-8A2.5 2.5 0 0 1 4.5 4zM17 7.96l-6.75 3.97a.5.5 0 0 1-.42.04l-.08-.04L3 7.96v6.54c0 .83.67 1.5 1.5 1.5h11c.83 0 1.5-.67 1.5-1.5zM15.5 5h-11C3.67 5 3 5.67 3 6.5v.3l7 4.12 7-4.12v-.3c0-.83-.67-1.5-1.5-1.5"/></symbol>
+<symbol id="i-compose" viewBox="0 0 20 20"><!-- mail_edit --><path d="M15.5 3A2.5 2.5 0 0 1 18 5.5v3.63q-.48-.15-1-.13V6.96l-6.75 3.97a.5.5 0 0 1-.42.04l-.08-.04L3 6.96v6.54c0 .83.67 1.5 1.5 1.5h5.48q-.34.46-.5 1H4.5A2.5 2.5 0 0 1 2 13.5v-8A2.5 2.5 0 0 1 4.5 3zm0 1h-11C3.67 4 3 4.67 3 5.5v.3l7 4.12 7-4.12v-.3c0-.83-.67-1.5-1.5-1.5m-4.52 11.38 4.83-4.83a1.87 1.87 0 1 1 2.64 2.64l-4.83 4.83a2 2 0 0 1-1.02.58l-1.5.37a.9.9 0 0 1-1.07-1.07l.37-1.5q.16-.6.58-1.02"/></symbol>
+<symbol id="i-delete" viewBox="0 0 20 20"><!-- delete --><path d="M8.5 4h3a1.5 1.5 0 0 0-3 0m-1 0a2.5 2.5 0 0 1 5 0h5a.5.5 0 0 1 0 1h-1.05l-1.2 10.34A3 3 0 0 1 12.27 18H7.73a3 3 0 0 1-2.98-2.66L3.55 5H2.5a.5.5 0 0 1 0-1zM5.74 15.23A2 2 0 0 0 7.73 17h4.54a2 2 0 0 0 1.99-1.77L15.44 5H4.56zM8.5 7.5c.28 0 .5.22.5.5v6a.5.5 0 0 1-1 0V8c0-.28.22-.5.5-.5M12 8a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/></symbol>
+<symbol id="i-popout" viewBox="0 0 20 20"><!-- window_new --><path d="M14 3a3 3 0 0 1 3 3v6a3 3 0 0 1-2.13 2.87A3 3 0 0 1 12 17H7.5A4.5 4.5 0 0 1 3 12.5V8a3 3 0 0 1 2.13-2.87A3 3 0 0 1 8 3zM5 6.27A2 2 0 0 0 4 8v4.5A3.5 3.5 0 0 0 7.5 16H12a2 2 0 0 0 1.73-1H8a3 3 0 0 1-3-3zM8 4a2 2 0 0 0-2 2v6c0 1.1.9 2 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm5.5 2c.28 0 .5.22.5.5v4a.5.5 0 0 1-1 0V7.7l-4.15 4.15a.5.5 0 1 1-.7-.7L12.29 7H9.5a.5.5 0 0 1 0-1z"/></symbol>
+<symbol id="i-archive" viewBox="0 0 20 20"><!-- archive --><path d="M8.5 10a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zM2 4.75C2 3.78 2.78 3 3.75 3h12.5c.97 0 1.75.78 1.75 1.75v1.5c0 .7-.4 1.3-1 1.58V14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7.83c-.6-.28-1-.88-1-1.58zM3.75 4a.75.75 0 0 0-.75.75v1.5c0 .41.34.75.75.75h12.5c.41 0 .75-.34.75-.75v-1.5a.75.75 0 0 0-.75-.75zM4 8v6c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V8z"/></symbol>
+<symbol id="i-junk" viewBox="0 0 20 20"><!-- warning_shield --><path d="M15.12 10.96c.2-.19.56-.19.76 0 .5.49 1.48 1.26 2.68 1.41.24.04.44.22.44.44v2.11c0 2.84-2.78 3.87-3.39 4.06a.4.4 0 0 1-.22 0c-.6-.19-3.39-1.22-3.39-4.06v-2.1c0-.23.2-.41.44-.45a5 5 0 0 0 2.68-1.4m-7.75-7.4a3 3 0 0 1 5.26 0l3.51 6.4a1.6 1.6 0 0 0-1.16-.05l-3.23-5.87a2 2 0 0 0-3.5 0l-5.5 10A2 2 0 0 0 4.5 17h6.96q.27.57.65 1h-7.6a3 3 0 0 1-2.63-4.44zM10 12.75a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5m0-6.25c.28 0 .5.22.5.5v4a.5.5 0 0 1-1 0V7c0-.28.22-.5.5-.5"/></symbol>
+<symbol id="i-warning" viewBox="0 0 20 20"><!-- warning --><path d="M7.37 3.56a3 3 0 0 1 5.26 0l5.5 10A3 3 0 0 1 15.5 18h-11a3 3 0 0 1-2.63-4.44zm4.38.48a2 2 0 0 0-3.5 0l-5.5 10A2 2 0 0 0 4.5 17h11a2 2 0 0 0 1.75-2.96zM10 12.75a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5m0-6.25c.28 0 .5.22.5.5v4a.5.5 0 0 1-1 0V7c0-.28.22-.5.5-.5"/></symbol>
+<symbol id="i-check" viewBox="0 0 20 20"><!-- checkmark --><path d="M3.37 10.17a.5.5 0 0 0-.74.66l4 4.5c.19.22.52.23.72.02l10.5-10.5a.5.5 0 0 0-.7-.7L7.02 14.27z"/></symbol>
+<symbol id="i-reply" viewBox="0 0 20 20"><!-- arrow_reply --><path d="M7.35 3.65c.2.2.2.5 0 .7L3.71 8h6.79a7.5 7.5 0 0 1 7.5 7.5.5.5 0 0 1-1 0A6.5 6.5 0 0 0 10.5 9H3.7l3.65 3.65a.5.5 0 0 1-.7.7l-4.5-4.5a.5.5 0 0 1 0-.7l4.5-4.5c.2-.2.5-.2.7 0"/></symbol>
+<symbol id="i-replyall" viewBox="0 0 20 20"><!-- arrow_reply_all --><path d="M7.35 3.65c.2.2.2.5 0 .7L3.21 8.5l4.14 4.15a.5.5 0 0 1-.7.7l-4.5-4.5a.5.5 0 0 1 0-.7l4.5-4.5c.2-.2.5-.2.7 0m3 0c.2.2.2.5 0 .7L6.71 8h3.79a7.5 7.5 0 0 1 7.5 7.5.5.5 0 0 1-1 0A6.5 6.5 0 0 0 10.5 9H6.7l3.65 3.65a.5.5 0 0 1-.7.7l-4.5-4.5a.5.5 0 0 1 0-.7l4.5-4.5c.2-.2.5-.2.7 0"/></symbol>
+<symbol id="i-forward" viewBox="0 0 20 20"><!-- arrow_forward --><path d="M12.65 3.65a.5.5 0 0 0 0 .7L16.29 8H9.5A7.5 7.5 0 0 0 2 15.5a.5.5 0 0 0 1 0A6.5 6.5 0 0 1 9.5 9h6.8l-3.65 3.65a.5.5 0 0 0 .7.7l4.5-4.5a.5.5 0 0 0 0-.7l-4.5-4.5a.5.5 0 0 0-.7 0"/></symbol>
+<symbol id="i-followup" viewBox="0 0 20 20"><!-- clock_alarm --><path d="M10 6.5a.5.5 0 0 0-1 0v4c0 .28.22.5.5.5h3a.5.5 0 1 0 0-1H10zM3.35 7.8A3.19 3.19 0 0 1 5.17 2c1.07 0 2.02.54 2.6 1.37a7 7 0 0 1 4.46 0A3.16 3.16 0 0 1 18 5.16c0 1.08-.54 2.04-1.36 2.61a7 7 0 0 1-1.35 6.8l1.56 1.57a.5.5 0 0 1-.7.7l-1.57-1.56a7 7 0 0 1-9.16 0l-1.57 1.56a.5.5 0 1 1-.7-.7l1.56-1.57A7 7 0 0 1 3.35 7.8M3 5.19c0 .66.3 1.25.75 1.65a7 7 0 0 1 3.06-3.07C6.41 3.3 5.82 3 5.17 3 3.97 3 3 3.98 3 5.19m13.24 1.64a2.17 2.17 0 1 0-3.06-3.07 7 7 0 0 1 3.06 3.07M4 10a6 6 0 1 0 12 0 6 6 0 0 0-12 0"/></symbol>
+<symbol id="i-readunread" viewBox="0 0 20 20"><!-- mail_read --><path d="M9.74 2.07a.5.5 0 0 1 .52 0l6.77 4.06A2 2 0 0 1 18 7.85v6.65a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 14.5V7.85a2 2 0 0 1 .97-1.72zM10 3.08 3.49 7 3.47 7 10 10.92 16.53 7h-.02zm7 4.8-6.74 4.05a.5.5 0 0 1-.52 0L3 7.88v6.62c0 .83.67 1.5 1.5 1.5h11c.83 0 1.5-.67 1.5-1.5z"/></symbol>
+<symbol id="i-unread" viewBox="0 0 20 20"><!-- mail_unread --><path d="M18 5.95a2.5 2.5 0 1 0-1-4.9 2.5 2.5 0 0 0 1 4.9M4.5 3h9.54a4 4 0 0 0 0 1H4.5C3.67 4 3 4.67 3 5.5v.3l7 4.12 5.75-3.39q.57.34 1.25.43l-6.75 3.97a.5.5 0 0 1-.42.04l-.08-.04L3 6.96v6.54c0 .83.67 1.5 1.5 1.5h11c.83 0 1.5-.67 1.5-1.5V6.96a4 4 0 0 0 1 0v6.54a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 13.5v-8A2.5 2.5 0 0 1 4.5 3"/></symbol>
+<symbol id="i-flagfilled" viewBox="0 0 20 20"><!-- flag filled --><path d="M5 13h11.5a.5.5 0 0 0 .42-.78L14.1 8l2.82-4.22A.5.5 0 0 0 16.5 3h-12a.5.5 0 0 0-.5.5v14a.5.5 0 0 0 1 0z"/></symbol>
+<symbol id="i-flag" viewBox="0 0 20 20"><!-- flag --><path d="M5 13h11.5a.5.5 0 0 0 .42-.78L14.1 8l2.82-4.22A.5.5 0 0 0 16.5 3h-12a.5.5 0 0 0-.5.5v14a.5.5 0 0 0 1 0zm0-1V4h10.57l-2.49 3.72a.5.5 0 0 0 0 .56L15.57 12z"/></symbol>
+<symbol id="i-allread" viewBox="0 0 20 20"><!-- mail_all_read --><path d="M8.76 2.06a.5.5 0 0 1 .48 0l5.7 3.08A2 2 0 0 1 16 6.9v5.6a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 2 12.5V6.9a2 2 0 0 1 1.05-1.77zm.24 1L3.53 6.03a1 1 0 0 0-.32.26L9 8.95l5.79-2.67a1 1 0 0 0-.32-.26zm6 4.22L9.21 9.95a.5.5 0 0 1-.42 0L3 7.28v5.22c0 .83.67 1.5 1.5 1.5h9c.83 0 1.5-.67 1.5-1.5zM6.5 17a2.5 2.5 0 0 1-2-1h9a3.5 3.5 0 0 0 3.5-3.5v-6c.6.46 1 1.18 1 2v4a4.5 4.5 0 0 1-4.5 4.5z"/></symbol>
+<symbol id="i-sync" viewBox="0 0 20 20"><!-- arrow_sync --><path d="M11.41 3.64a.5.5 0 0 0 0-.71L9.3.8a.5.5 0 0 0-.7.7l1 1a7.5 7.5 0 0 0-4.08 13.5.5.5 0 0 0 .6-.8A6.5 6.5 0 0 1 10.14 3.5L8.59 5.04a.5.5 0 0 0 .7.7zM8.6 16.36a.5.5 0 0 0 0 .71l2.12 2.12a.5.5 0 0 0 .7-.7l-1-1a7.5 7.5 0 0 0 4.07-13.5.5.5 0 1 0-.59.8q.37.28.7.61a6.5 6.5 0 0 1-4.73 11.1l1.55-1.55a.5.5 0 1 0-.7-.7z"/></symbol>
+<symbol id="i-team" viewBox="0 0 20 20"><!-- people_team --><path d="M10 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M7.5 4.5a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0m8-.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m-10 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0m1-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4m.6 12H5a2 2 0 0 1-2-2V9.25c0-.14.11-.25.25-.25h1.76q.06-.55.37-1H3.25C2.56 8 2 8.56 2 9.25V13a3 3 0 0 0 3.4 2.97 5 5 0 0 1-.3-.97m9.5.97q.2.03.4.03a3 3 0 0 0 3-3V9.25C18 8.56 17.44 8 16.75 8h-2.13q.3.45.37 1h1.76q.23.02.25.25V13a2 2 0 0 1-2.1 2q-.1.5-.3.97M7.25 8C6.56 8 6 8.56 6 9.25V14a4 4 0 0 0 8 0V9.25C14 8.56 13.44 8 12.75 8zM7 9.25c0-.14.11-.25.25-.25h5.5q.23.02.25.25V14a3 3 0 1 1-6 0z"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 20 20"><!-- mail_inbox --><path d="M6 3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3zm10 7h-3.5a.5.5 0 0 0-.5.5v.01l-.03.3q-.05.31-.23.72-.18.39-.57.66-.37.29-1.17.31c-.54 0-.9-.13-1.17-.3a2 2 0 0 1-.57-.67A3 3 0 0 1 8 10.5v-.01a.5.5 0 0 0-.5-.5H4V6c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2zM4 11h3.05c.05.26.14.62.32.97q.26.59.9 1.06.67.45 1.73.47 1.06-.02 1.72-.47.65-.47.91-1.06c.18-.35.27-.7.32-.97H16v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></symbol>
+<symbol id="i-person" viewBox="0 0 20 20"><!-- person --><path d="M10 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8M7 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0m-2 5a2 2 0 0 0-2 2c0 1.7.83 2.97 2.13 3.8A9 9 0 0 0 10 18c1.85 0 3.58-.39 4.87-1.2A4.4 4.4 0 0 0 17 13a2 2 0 0 0-2-2zm-1 2a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1c0 1.3-.62 2.28-1.67 2.95A8 8 0 0 1 10 17a8 8 0 0 1-4.33-1.05A3.4 3.4 0 0 1 4 13"/></symbol>
+<symbol id="i-unassigned" viewBox="0 0 20 20"><!-- person_question_mark --><path d="M9 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8M6 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0m-2 5a2 2 0 0 0-2 2c0 1.7.83 2.97 2.13 3.8A9 9 0 0 0 9 18q.62 0 1.21-.06A6 6 0 0 1 9.6 17L9 17a8 8 0 0 1-4.33-1.05A3.4 3.4 0 0 1 3 13a1 1 0 0 1 1-1h5.6q.27-.54.66-1zm10.5 8a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9m.62-2a.62.62 0 1 0-1.24 0 .62.62 0 0 0 1.24 0m1.23-3.55c0-1.1-.82-1.95-1.85-1.95-1.05 0-1.86.82-1.85 1.96a.5.5 0 1 0 1-.01c0-.58.36-.95.85-.95.47 0 .85.4.85.95 0 .2-.07.32-.36.55l-.27.21c-.51.4-.72.72-.72 1.29a.5.5 0 0 0 1 .09v-.16c.02-.14.1-.25.35-.44l.28-.22c.5-.4.72-.73.72-1.32"/></symbol>
+<symbol id="i-contacts" viewBox="0 0 20 20"><!-- contact_card --><path d="M8 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-4 3.2c0-.53.42-.95.95-.95h3.1c.53 0 .95.42.95.95 0 .85-.58 1.58-1.4 1.79l-.06.01a4 4 0 0 1-2.08 0l-.06-.01c-.82-.2-1.4-.94-1.4-1.8M11.5 8a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zM2 5.75C2 4.78 2.78 4 3.75 4h12.5c.97 0 1.75.78 1.75 1.75v8.5c0 .97-.78 1.75-1.75 1.75H3.75C2.78 16 2 15.22 2 14.25zM3.75 5a.75.75 0 0 0-.75.75v8.5c0 .41.34.75.75.75h12.5c.41 0 .75-.34.75-.75v-8.5a.75.75 0 0 0-.75-.75z"/></symbol>
+<symbol id="i-exportcontacts" viewBox="0 0 20 20"><!-- contact_card_link --><path d="M6.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m-1.55.75a.95.95 0 0 0-.95.95c0 .85.58 1.58 1.4 1.79l.06.01c.68.18 1.4.18 2.08 0l.06-.01c.82-.2 1.4-.94 1.4-1.8a.95.95 0 0 0-.95-.94zM11 8.5c0-.28.22-.5.5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5M9.04 15H3.75a.75.75 0 0 1-.75-.75v-8.5c0-.41.34-.75.75-.75h12.5c.41 0 .75.34.75.75v5.29q.53.07 1 .3V5.75C18 4.78 17.22 4 16.25 4H3.75C2.78 4 2 4.78 2 5.75v8.5c0 .97.78 1.75 1.75 1.75h5.59a4 4 0 0 1-.3-1m3.46-3a2.5 2.5 0 0 0 0 5h.5a.5.5 0 0 0 0-1h-.5a1.5 1.5 0 0 1 0-3h.5a.5.5 0 0 0 0-1zm3.5 0a.5.5 0 0 0 0 1h.5a1.5 1.5 0 0 1 0 3H16a.5.5 0 0 0 0 1h.5a2.5 2.5 0 0 0 0-5zm-4 2.5c0-.28.22-.5.5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5"/></symbol>
+<symbol id="i-clearfilters" viewBox="0 0 20 20"><!-- filter_dismiss --><path d="M12.5 15a.5.5 0 0 1 .09 1H7.5a.5.5 0 0 1-.09-1h5.09m2-4a.5.5 0 0 1 .09 1H5.5a.5.5 0 0 1-.09-1h9.09m0-10a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9M9.2 7q.16.52.4 1H3.5a.5.5 0 0 1-.09-1H9.2m7.15-3.35a.5.5 0 0 0-.7 0L14.5 4.79l-1.15-1.14a.5.5 0 1 0-.7.7l1.14 1.15-1.14 1.15a.5.5 0 1 0 .7.7l1.15-1.14 1.15 1.14a.5.5 0 1 0 .7-.7L15.21 5.5l1.14-1.15a.5.5 0 0 0 0-.7"/></symbol>
+<symbol id="i-panel" viewBox="0 0 20 20"><!-- panel_left --><path d="M15 4a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM8.5 15H15a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H8.5zM5 5a2 2 0 0 0-2 2v6c0 1.1.9 2 2 2h2.5V5z"/></symbol>
+<symbol id="i-addaccount" viewBox="0 0 20 20"><!-- person_add --><path d="M9 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8M6 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0m-2 5a2 2 0 0 0-2 2c0 1.7.83 2.97 2.13 3.8A9 9 0 0 0 9 18q.62 0 1.21-.06A6 6 0 0 1 9.6 17L9 17a8 8 0 0 1-4.33-1.05A3.4 3.4 0 0 1 3 13a1 1 0 0 1 1-1h5.6q.27-.54.66-1zm10.5 8a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9m0-7c.28 0 .5.22.5.5V14h1.5a.5.5 0 0 1 0 1H15v1.5a.5.5 0 0 1-1 0V15h-1.5a.5.5 0 0 1 0-1H14v-1.5c0-.28.22-.5.5-.5"/></symbol>
+<symbol id="i-settings" viewBox="0 0 20 20"><!-- settings --><path d="M1.91 7.38A8.5 8.5 0 0 1 3.7 4.3a.5.5 0 0 1 .54-.13l1.92.68a1 1 0 0 0 1.32-.76l.36-2a.5.5 0 0 1 .4-.4 9 9 0 0 1 3.55 0q.32.08.38.4l.37 2a1 1 0 0 0 1.32.76l1.92-.68a.5.5 0 0 1 .54.13 8.5 8.5 0 0 1 1.78 3.08q.08.31-.15.54l-1.56 1.32a1 1 0 0 0 0 1.52l1.56 1.32a.5.5 0 0 1 .15.54 8.5 8.5 0 0 1-1.78 3.08.5.5 0 0 1-.54.13l-1.92-.68a1 1 0 0 0-1.32.76l-.37 2a.5.5 0 0 1-.38.4 8.5 8.5 0 0 1-3.56 0 .5.5 0 0 1-.39-.4l-.36-2a1 1 0 0 0-1.32-.76l-1.92.68a.5.5 0 0 1-.54-.13 8.5 8.5 0 0 1-1.78-3.08.5.5 0 0 1 .15-.54l1.56-1.32a1 1 0 0 0 0-1.52L2.06 7.92a.5.5 0 0 1-.15-.54m1.06 0 1.3 1.1a2 2 0 0 1 0 3.04l-1.3 1.1q.45 1.19 1.25 2.16l1.6-.58a2 2 0 0 1 2.63 1.53l.3 1.67a8 8 0 0 0 2.5 0l.3-1.67a2 2 0 0 1 2.64-1.53l1.6.58a8 8 0 0 0 1.24-2.16l-1.3-1.1a2 2 0 0 1 0-3.04l1.3-1.1a8 8 0 0 0-1.25-2.16l-1.6.58a2 2 0 0 1-2.63-1.53l-.3-1.67a8 8 0 0 0-2.5 0l-.3 1.67A2 2 0 0 1 5.81 5.8l-1.6-.58a8 8 0 0 0-1.24 2.16M7.5 10a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0m1 0a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0"/></symbol>
+<symbol id="i-rules" viewBox="0 0 20 20"><!-- gavel --><path d="M6.44 5.28a1.5 1.5 0 0 0 .23 2.31l1.76 1.18-5.85 5.86a1.98 1.98 0 1 0 2.8 2.8l5.85-5.86 1.18 1.76c.53.79 1.64.9 2.3.23l2.85-2.84a1.5 1.5 0 0 0-.19-2.28l-3.31-2.39-.12-.11-2.38-3.31a1.5 1.5 0 0 0-2.28-.19zm4.22 5.44-6 6a.98.98 0 0 1-1.37-1.39l5.99-5.99.74.5q.09.05.14.14zM7.22 6.76a.5.5 0 0 1-.07-.77l2.84-2.84a.5.5 0 0 1 .76.06l.56.79-3.29 3.3zm1.65 1.1 3.04-3.04 1.22 1.7q.15.2.34.35l1.7 1.22-3.03 3.04-1.15-1.71a2 2 0 0 0-.41-.41zM16 8.7l.79.56a.5.5 0 0 1 .06.76L14 12.85a.5.5 0 0 1-.77-.07l-.53-.8zm-4 7.81c0-.28.22-.5.5-.5h3a.5.5 0 1 1 0 1h2a.5.5 0 1 1 0 1h-7a.5.5 0 1 1 0-1h2a.5.5 0 0 1-.5-.5"/></symbol>
+<symbol id="i-shield" viewBox="0 0 20 20"><!-- shield_checkmark --><path d="M9.72 2.08a.5.5 0 0 1 .56 0q2.9 1.94 6.3 2.43A.5.5 0 0 1 17 5v4.6q-.48-.25-1-.4V5.44a16 16 0 0 1-5.6-2.08L10 3.1l-.4.25A16 16 0 0 1 4 5.43V9.5c0 3.24 1.8 5.64 5.48 7.25q.3.65.74 1.2l-.04.02a.5.5 0 0 1-.36 0C5.31 16.23 3 13.39 3 9.5V5a.5.5 0 0 1 .43-.5 15 15 0 0 0 6.3-2.42M19 14.5a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0m-2.15-1.85a.5.5 0 0 0-.7 0l-2.65 2.64-.65-.64a.5.5 0 0 0-.7.7l1 1c.2.2.5.2.7 0l3-3a.5.5 0 0 0 0-.7"/></symbol>
+<symbol id="i-export" viewBox="0 0 20 20"><!-- arrow_export_ltr --><path d="M2.5 4c.28 0 .5.22.5.5v11a.5.5 0 0 1-1 0v-11c0-.28.22-.5.5-.5M5 10c0-.28.22-.5.5-.5h10.8l-3.15-3.15a.5.5 0 0 1 .7-.7l4 4a.5.5 0 0 1 0 .7l-4 4a.5.5 0 0 1-.7-.7l3.14-3.15H5.5A.5.5 0 0 1 5 10"/></symbol>
+<symbol id="i-import" viewBox="0 0 20 20"><!-- arrow_import --><path d="M17.5 4c.28 0 .5.22.5.5v11a.5.5 0 0 1-1 0v-11c0-.28.22-.5.5-.5M2 10c0-.28.22-.5.5-.5h10.8l-3.15-3.15a.5.5 0 0 1 .7-.7l4 4A.5.5 0 0 1 15 10a.5.5 0 0 1-.15.35l-4 4a.5.5 0 0 1-.7-.7l3.14-3.15H2.5A.5.5 0 0 1 2 10"/></symbol>
+<symbol id="i-importpst" viewBox="0 0 20 20"><!-- mail_arrow_down --><path d="M17 14.5v-4.1q.54-.27 1-.66v4.76a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 14.5v-8A2.5 2.5 0 0 1 4.5 4h4.7q-.13.49-.18 1H4.5C3.67 5 3 5.67 3 6.5v.3l7 4.12 1.44-.85q.5.33 1.04.55l-2.23 1.31a.5.5 0 0 1-.42.04l-.08-.04L3 7.96v6.54c0 .83.67 1.5 1.5 1.5h11c.83 0 1.5-.67 1.5-1.5M14.5 10a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9m-2.35-4.15 2 2a.5.5 0 0 0 .35.15.5.5 0 0 0 .35-.15l2-2a.5.5 0 0 0-.7-.7L15 6.29V3.5a.5.5 0 0 0-1 0v2.8l-1.15-1.15a.5.5 0 0 0-.7.7"/></symbol>
+<symbol id="i-folder" viewBox="0 0 20 20"><!-- folder --><path d="M4.5 3A2.5 2.5 0 0 0 2 5.5v9A2.5 2.5 0 0 0 4.5 17h11a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 15.5 5H9.7L8.23 3.51A1.8 1.8 0 0 0 6.98 3zM3 5.5C3 4.67 3.67 4 4.5 4h2.48q.32 0 .53.22L8.8 5.5 7.44 6.85a.5.5 0 0 1-.35.15H3zM3 8h4.09c.4 0 .78-.16 1.06-.44L9.7 6h5.79c.83 0 1.5.67 1.5 1.5v7c0 .83-.67 1.5-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5z"/></symbol>
+<symbol id="i-folderopen" viewBox="0 0 20 20"><!-- folder_open --><path d="M3 5.5v6.6l1.5-2.6A3 3 0 0 1 7.1 8H15v-.5c0-.83-.67-1.5-1.5-1.5h-4a.5.5 0 0 1-.35-.15l-1.71-1.7A.5.5 0 0 0 7.09 4H4.5C3.67 4 3 4.67 3 5.5m1.28 10.48.22.02h9.4a2 2 0 0 0 1.73-1l2.17-3.75A1.5 1.5 0 0 0 16.5 9H7.1a2 2 0 0 0-1.73 1L3.2 13.75a1.5 1.5 0 0 0 1.08 2.23M2 14.46V5.5A2.5 2.5 0 0 1 4.5 3h2.59c.4 0 .78.16 1.06.44L9.7 5h3.79A2.5 2.5 0 0 1 16 7.5V8h.5a2.5 2.5 0 0 1 2.16 3.75L16.5 15.5a3 3 0 0 1-2.6 1.5H4.5a2.5 2.5 0 0 1-1.62-.6A2.5 2.5 0 0 1 2 14.46"/></symbol>
+<symbol id="i-send" viewBox="0 0 20 20"><!-- send --><path d="M2.18 2.11a.5.5 0 0 1 .54-.06l15 7.5a.5.5 0 0 1 0 .9l-15 7.5a.5.5 0 0 1-.7-.58L3.98 10 2.02 2.63a.5.5 0 0 1 .16-.52m2.7 8.39-1.61 6.06L16.38 10 3.27 3.44 4.88 9.5h6.62a.5.5 0 1 1 0 1z"/></symbol>
+<symbol id="i-drafts" viewBox="0 0 20 20"><!-- drafts --><path d="m13.25 2.82-9.61 9.6-.12.13a2 2 0 0 0-.4.76l-1.1 4.06-.02.08a.5.5 0 0 0 .63.53l4.06-1.1.16-.06a2 2 0 0 0 .73-.46l9.6-9.6.13-.15a2.78 2.78 0 0 0-4.06-3.8m-8.9 10.31 8.04-8.04 2.52 2.52-8.04 8.04-.1.09-.1.07-.25.1-3.2.87.87-3.2.04-.13a1 1 0 0 1 .22-.32m12.12-9.6.11.11c.59.7.55 1.75-.1 2.4l-.87.87-2.52-2.53.86-.86.12-.1c.7-.59 1.75-.55 2.4.1M11.65 3H2.5a.5.5 0 0 0 0 1h8.15zm-3 3H2.5a.5.5 0 0 0 0 1h5.15zm-4 4 1-1H2.5a.5.5 0 0 0 0 1z"/></symbol>
+<symbol id="i-outbox" viewBox="0 0 20 20"><!-- mail_arrow_up --><path d="M19 5.5a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0m-4.15-2.35A.5.5 0 0 0 14.5 3a.5.5 0 0 0-.35.15l-2 2a.5.5 0 0 0 .7.7L14 4.71V7.5a.5.5 0 1 0 1 0V4.7l1.15 1.15a.5.5 0 1 0 .7-.7zM17 14.5v-4.1q.54-.27 1-.66v4.76a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 14.5v-8A2.5 2.5 0 0 1 4.5 4h4.7q-.13.49-.18 1H4.5C3.67 5 3 5.67 3 6.5v.3l7 4.12 1.44-.85q.5.33 1.04.55l-2.23 1.31a.5.5 0 0 1-.42.04l-.08-.04L3 7.96v6.54c0 .83.67 1.5 1.5 1.5h11c.83 0 1.5-.67 1.5-1.5"/></symbol>
+<symbol id="i-attach" viewBox="0 0 20 20"><!-- attach --><path d="m4.83 10.48 5.65-5.65a3 3 0 0 1 4.25 4.24L8 15.8a1.5 1.5 0 0 1-2.12-2.12l6-6.01a.5.5 0 1 0-.7-.71l-6 6.01a2.5 2.5 0 0 0 3.53 3.54l6.71-6.72a4 4 0 1 0-5.65-5.66L4.12 9.78a.5.5 0 0 0 .7.7"/></symbol>
+<symbol id="i-save" viewBox="0 0 20 20"><!-- save --><path d="M3 5c0-1.1.9-2 2-2h8.38a2 2 0 0 1 1.41.59l1.62 1.62A2 2 0 0 1 17 6.62V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1v-4.5c0-.83.67-1.5 1.5-1.5h7c.83 0 1.5.67 1.5 1.5V16a1 1 0 0 0 1-1V6.62a1 1 0 0 0-.3-.7L14.1 4.28a1 1 0 0 0-.71-.29H13v2.5c0 .83-.67 1.5-1.5 1.5h-4A1.5 1.5 0 0 1 6 6.5V4zm2 0v2.5c0 .28.22.5.5.5h4a.5.5 0 0 0 .5-.5V4zm7 12v-4.5a.5.5 0 0 0-.5-.5h-7a.5.5 0 0 0-.5.5V16z"/></symbol>
+<symbol id="i-more" viewBox="0 0 20 20"><!-- more_horizontal --><path d="M6.25 10a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0m5 0a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0M15 11.25a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5"/></symbol>
+<symbol id="i-sun" viewBox="0 0 20 20"><!-- weather_sunny --><path d="M10 2c.28 0 .5.22.5.5v1a.5.5 0 0 1-1 0v-1c0-.28.22-.5.5-.5m0 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8m0-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6m7.5-2.5a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1zM10 16c.28 0 .5.22.5.5v1a.5.5 0 0 1-1 0v-1c0-.28.22-.5.5-.5m-6.5-5.5a.5.5 0 0 0 0-1H2.46a.5.5 0 0 0 0 1zm.65-6.35c.2-.2.5-.2.7 0l1 1a.5.5 0 1 1-.7.7l-1-1a.5.5 0 0 1 0-.7m.7 11.7a.5.5 0 0 1-.7-.7l1-1a.5.5 0 0 1 .7.7zm11-11.7a.5.5 0 0 0-.7 0l-1 1a.5.5 0 0 0 .7.7l1-1a.5.5 0 0 0 0-.7m-.7 11.7a.5.5 0 0 0 .7-.7l-1-1a.5.5 0 0 0-.7.7z"/></symbol>
+<symbol id="i-moon" viewBox="0 0 20 20"><!-- weather_moon --><path d="M15.5 13.5A6.98 6.98 0 0 1 4 14.39c2.83-1.09 4.56-2.42 5.6-4.4 1.04-2 1.33-4.16.75-6.9q1.36.17 2.58.87a7 7 0 0 1 2.55 9.54M5.45 16.92A7.98 7.98 0 1 0 9.88 2.04a.6.6 0 0 0-.61.73c.69 2.82.43 4.88-.55 6.76-.94 1.78-2.55 3.03-5.55 4.1a.6.6 0 0 0-.3.9 8 8 0 0 0 2.59 2.39"/></symbol>
+<symbol id="i-dismiss" viewBox="0 0 20 20"><!-- dismiss --><path d="m4.09 4.22.06-.07a.5.5 0 0 1 .63-.06l.07.06L10 9.29l5.15-5.14a.5.5 0 0 1 .63-.06l.07.06c.18.17.2.44.06.63l-.06.07L10.71 10l5.14 5.15c.18.17.2.44.06.63l-.06.07a.5.5 0 0 1-.63.06l-.07-.06L10 10.71l-5.15 5.14a.5.5 0 0 1-.63.06l-.07-.06a.5.5 0 0 1-.06-.63l.06-.07L9.29 10 4.15 4.85a.5.5 0 0 1-.06-.63l.06-.07z"/></symbol>
+<symbol id="i-left" viewBox="0 0 20 20"><!-- chevron_left --><path d="M12.35 15.85a.5.5 0 0 1-.7 0L6.16 10.4a.55.55 0 0 1 0-.78l5.49-5.46a.5.5 0 1 1 .7.7L7.2 10l5.16 5.15c.2.2.2.5 0 .7"/></symbol>
+<symbol id="i-right" viewBox="0 0 20 20"><!-- chevron_right --><path d="M7.65 4.15c.2-.2.5-.2.7 0l5.49 5.46c.21.22.21.57 0 .78l-5.49 5.47a.5.5 0 0 1-.7-.71L12.8 10 7.65 4.85a.5.5 0 0 1 0-.7"/></symbol>
+<symbol id="i-archivebox" viewBox="0 0 20 20"><!-- box --><path d="M11.3 2.48a3.5 3.5 0 0 0-2.6 0l-5.76 2.3A1.5 1.5 0 0 0 2 6.18v7.64c0 .62.37 1.17.94 1.4l5.76 2.3a3.5 3.5 0 0 0 2.6 0l5.76-2.3c.57-.23.94-.78.94-1.4V6.18a1.5 1.5 0 0 0-.94-1.4zm-2.23.93a2.5 2.5 0 0 1 1.86 0l5.22 2.09-2.27.91-6.16-2.46zm-2.7 1.08 6.16 2.46L10 7.96 3.85 5.5zm4.13 4.35 6.5-2.6v7.58a.5.5 0 0 1-.31.47l-5.76 2.3q-.2.09-.43.13zm-1 0v7.88a3 3 0 0 1-.43-.13l-5.76-2.3a.5.5 0 0 1-.31-.47V6.24z"/></symbol>
+<symbol id="i-database" viewBox="0 0 20 20"><!-- database --><path d="M4 5c0-1 .88-1.76 1.9-2.22C6.98 2.28 8.43 2 10 2s3.02.29 4.1.78C15.12 3.24 16 3.99 16 5v10c0 1-.88 1.76-1.9 2.22-1.08.5-2.53.78-4.1.78s-3.02-.29-4.1-.78C4.88 16.76 4 16.01 4 15zm1 0c0 .37.36.88 1.32 1.31.91.42 2.22.69 3.68.69s2.77-.27 3.68-.69C14.64 5.88 15 5.37 15 5s-.36-.88-1.32-1.31A9 9 0 0 0 10 3c-1.46 0-2.77.27-3.68.69C5.36 4.12 5 4.63 5 5m10 1.7q-.41.3-.9.52c-1.08.5-2.53.78-4.1.78s-3.02-.29-4.1-.78A5 5 0 0 1 5 6.7V15c0 .37.36.88 1.32 1.31.91.42 2.22.69 3.68.69s2.77-.27 3.68-.69c.96-.43 1.32-.94 1.32-1.31z"/></symbol>
+    </svg>
+    <div class="shell">
+    <!-- Ribbon. Outlook's model: tabs across the top, each holding labelled groups of commands.
+         Anything acting on a message is disabled until one is selected, rather than failing when
+         pressed. -->
+    <div class="ribbon">
+      <div class="ribbon-tabs" id="ribbon-tabs">
+        <button class="rtab on" data-tab="home">Home</button>
+        <button class="rtab" data-tab="send">Send / Receive</button>
+        <button class="rtab" data-tab="view">View</button>
+        <button class="rtab" data-tab="tools">Tools</button>
+      </div>
+
+      <div class="ribbon-body">
+        <!-- ---------------------------------------------------------- Home -->
+        <div class="rpanel on" data-panel="home">
+          <div class="rgroup">
+            <button id="btn-compose" class="rbtn rbtn-lg" title="New message (Ctrl+N)">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-compose"></use></svg></span><span>New<br />message</span>
+            </button>
+            <div class="rgroup-label">New</div>
+          </div>
+
+          <div class="rgroup">
+            <button class="rbtn rbtn-lg" data-cmd="delete" data-needs-message title="Delete (Del)">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-delete"></use></svg></span><span>Delete</span>
+            </button>
+            <div class="rstack">
+              <button class="rbtn" data-cmd="pop-out" data-needs-message title="Open in a new window"><svg class="ic" aria-hidden="true"><use href="#i-popout"></use></svg> Pop out</button>
+              <button class="rbtn" data-cmd="archive" data-needs-message><svg class="ic" aria-hidden="true"><use href="#i-archive"></use></svg> Archive</button>
+              <button class="rbtn" data-cmd="junk" data-needs-message><svg class="ic" aria-hidden="true"><use href="#i-junk"></use></svg> Junk</button>
+              <button class="rbtn" data-cmd="not-junk" data-needs-message><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg> Not junk</button>
+            </div>
+            <div class="rgroup-label">Delete</div>
+          </div>
+
+          <div class="rgroup">
+            <button class="rbtn rbtn-lg" data-cmd="reply" data-needs-message title="Reply (Ctrl+R)">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-reply"></use></svg></span><span>Reply</span>
+            </button>
+            <button class="rbtn rbtn-lg" data-cmd="reply-all" data-needs-message title="Reply all (Ctrl+Shift+R)">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-replyall"></use></svg></span><span>Reply<br />all</span>
+            </button>
+            <button class="rbtn rbtn-lg" data-cmd="forward" data-needs-message title="Forward">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-forward"></use></svg></span><span>Forward</span>
+            </button>
+            <div class="rgroup-label">Respond</div>
+          </div>
+
+          <div class="rgroup">
+            <div class="rstack">
+              <label class="rlabel">Move to</label>
+              <select id="ribbon-move" data-needs-message></select>
+            </div>
+            <div class="rgroup-label">Move</div>
+          </div>
+
+          <div class="rgroup">
+            <div class="rstack">
+              <button class="rbtn" data-cmd="toggle-read" data-needs-message><svg class="ic" aria-hidden="true"><use href="#i-readunread"></use></svg> Read / unread</button>
+              <button class="rbtn" data-cmd="toggle-flag" data-needs-message><svg class="ic" aria-hidden="true"><use href="#i-flag"></use></svg> Flag</button>
+              <button id="btn-mark-all-read" class="rbtn"><svg class="ic" aria-hidden="true"><use href="#i-allread"></use></svg> Mark all read</button>
+            </div>
+            <div class="rgroup-label">Tags</div>
+          </div>
+        </div>
+
+        <!-- -------------------------------------------------- Send / Receive -->
+        <div class="rpanel" data-panel="send">
+          <div class="rgroup">
+            <button id="btn-sync" class="rbtn rbtn-lg" title="Sync all accounts (F9)">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-sync"></use></svg></span><span>Send /<br />receive all</span>
+            </button>
+            <div class="rgroup-label">Send &amp; receive</div>
+          </div>
+          <div class="rgroup">
+            <button class="rbtn rbtn-lg" data-cmd="sync-team">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-team"></use></svg></span><span>Sync<br />team state</span>
+            </button>
+            <div class="rgroup-label">Team</div>
+          </div>
+          <div class="rgroup">
+            <div class="rstack">
+              <span class="rinfo" id="ribbon-sync-info">Not synced yet</span>
+            </div>
+            <div class="rgroup-label">Status</div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------- View -->
+        <div class="rpanel" data-panel="view">
+          <div class="rgroup">
+            <div class="seg" id="theme-seg">
+              <button type="button" data-theme="light">Light</button>
+              <button type="button" data-theme="dark">Dark</button>
+              <button type="button" data-theme="system">System</button>
+            </div>
+            <div class="rgroup-label">Theme</div>
+          </div>
+          <div class="rgroup">
+            <div class="rstack">
+              <button class="rbtn" data-cmd="view-inbox"><svg class="ic" aria-hidden="true"><use href="#i-inbox"></use></svg> Inbox</button>
+              <button class="rbtn" data-cmd="view-mine"><svg class="ic" aria-hidden="true"><use href="#i-person"></use></svg> Mine</button>
+              <button class="rbtn" data-cmd="view-unassigned"><svg class="ic" aria-hidden="true"><use href="#i-unassigned"></use></svg> Unassigned</button>
+              <button class="rbtn" data-cmd="view-followups"><svg class="ic" aria-hidden="true"><use href="#i-followup"></use></svg> Follow-ups</button>
+              <button class="rbtn" data-cmd="view-contacts"><svg class="ic" aria-hidden="true"><use href="#i-contacts"></use></svg> Contacts</button>
+              <button class="rbtn" data-cmd="export-contacts"><svg class="ic" aria-hidden="true"><use href="#i-exportcontacts"></use></svg> Export contacts</button>
+            </div>
+            <div class="rgroup-label">Go to</div>
+          </div>
+          <div class="rgroup">
+            <button class="rbtn rbtn-lg" data-cmd="clear-filters">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-clearfilters"></use></svg></span><span>Clear<br />filters</span>
+            </button>
+            <div class="rgroup-label">Filters</div>
+          </div>
+          <div class="rgroup">
+            <button
+              class="rbtn rbtn-lg"
+              data-cmd="toggle-list"
+              title="Show or hide the message list (Ctrl+Shift+L)"
+            >
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-panel"></use></svg></span><span id="toggle-list-label">Hide<br />list</span>
+            </button>
+            <div class="rgroup-label">Layout</div>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------- Tools -->
+        <div class="rpanel" data-panel="tools">
+          <div class="rgroup">
+            <button id="btn-add-account" class="rbtn rbtn-lg">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-addaccount"></use></svg></span><span>Add<br />account</span>
+            </button>
+            <button id="btn-settings" class="rbtn rbtn-lg">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-settings"></use></svg></span><span>Settings</span>
+            </button>
+            <div class="rgroup-label">Accounts</div>
+          </div>
+          <div class="rgroup">
+            <button id="btn-team" class="rbtn rbtn-lg">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-team"></use></svg></span><span>Sales<br />team</span>
+            </button>
+            <button id="btn-rules" class="rbtn rbtn-lg">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-rules"></use></svg></span><span>Rules</span>
+            </button>
+            <div class="rgroup-label">Organise</div>
+          </div>
+          <div class="rgroup">
+            <button id="btn-junk-options" class="rbtn rbtn-lg">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg></span><span>Junk<br />options</span>
+            </button>
+            <div class="rgroup-label">Protection</div>
+          </div>
+          <div class="rgroup">
+            <button id="btn-export" class="rbtn rbtn-lg" title="Save everything to a single file">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-export"></use></svg></span><span>Export<br />data file</span>
+            </button>
+            <button id="btn-import" class="rbtn rbtn-lg" title="Merge a data file into this one">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-import"></use></svg></span><span>Import<br />data file</span>
+            </button>
+            <button id="btn-import-pst" class="rbtn rbtn-lg" title="Import mail from an Outlook .pst">
+              <span class="rico"><svg class="ic" aria-hidden="true"><use href="#i-importpst"></use></svg></span><span>Import<br />from Outlook</span>
+            </button>
+            <div class="rgroup-label">Data file</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="app" class="layout">
+      <!-- Rail: views, accounts, folders -->
+      <aside class="rail">
+        <div class="rail-head">
+          <div class="brand-row">
+            <div class="brand"><span class="brand-mark" data-initial="S"><svg class="ic" aria-hidden="true"><use href="#i-mail"></use></svg></span> <span id="brand-name">Signet</span></div>
+          </div>
+        </div>
+        <nav id="folders" class="folders" aria-label="Folders"></nav>
+      </aside>
+
+      <!-- List pane -->
+      <section class="list-pane">
+        <header class="list-head">
+          <div class="search-wrap">
+            <button
+              type="button"
+              id="btn-collapse-list"
+              class="pane-toggle"
+              title="Collapse the message list (Ctrl+Shift+L)"
+              aria-label="Collapse the message list"
+            >
+              ‹
+            </button>
+            <input
+              id="search"
+              class="search"
+              type="search"
+              placeholder="Search mail (Ctrl+E)"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+          <div class="chips-row" id="filter-chips" role="group" aria-label="Filters">
+            <button type="button" class="fchip" data-filter="unread" aria-pressed="false">Unread</button>
+            <button type="button" class="fchip" data-filter="flagged" aria-pressed="false">Flagged</button>
+            <button type="button" class="fchip" data-filter="high" aria-pressed="false">High priority</button>
+            <button type="button" class="fchip" data-filter="mine" aria-pressed="false">Mine</button>
+            <button type="button" class="fchip" data-filter="unassigned" aria-pressed="false">Unassigned</button>
+            <button type="button" class="fchip" data-filter="reminder" aria-pressed="false">Follow-up</button>
+          </div>
+          <div class="list-meta">
+            <span id="list-count"></span>
+          </div>
+        </header>
+        <div id="message-list" class="message-list" role="list" tabindex="0"></div>
+      </section>
+
+      <!-- Stands in for the collapsed list, so there is always a way back. -->
+      <button
+        type="button"
+        id="list-restore"
+        class="list-restore"
+        title="Show the message list (Ctrl+Shift+L)"
+        aria-label="Show the message list"
+      >
+        <span class="list-restore-arrow">›</span>
+        <span class="list-restore-label">Messages</span>
+        <span class="list-restore-count" id="list-restore-count"></span>
+      </button>
+
+      <!-- Reading pane -->
+      <section class="read-pane">
+        <div id="reader" class="reader"></div>
+      </section>
+    </div>
+
+    </div>
+
+
+    <!-- Send/Receive progress. One row per account, because they run one after another and a
+         single bar across all of them cannot say which one is slow. -->
+    <div id="progress-panel" class="progress-panel" hidden>
+      <div class="progress-head">
+        <span class="progress-title">Send &amp; Receive</span>
+        <span class="spacer"></span>
+        <button type="button" id="progress-hide" class="btn btn-quiet small" title="Hide">Hide</button>
+      </div>
+      <div id="progress-rows" class="progress-rows"></div>
+    </div>
+    <div id="status" class="status" aria-live="polite"></div>
+
+    <!-- Application context menu. Without one the WebView shows Chromium's own, which offers Back
+         (which would navigate the webview off the app), Save as, Print and Send tab to your
+         devices -- none of which mean anything here, and the first of which breaks it. -->
+    <div id="ctx-menu" class="ctx-menu" role="menu" hidden></div>
+
+
+    <!-- Attachment viewer. Images and PDFs open here rather than forcing a save-and-open round
+         trip through Explorer, which is most of the work of reading a quote. -->
+    <div id="viewer" class="viewer" hidden>
+      <div class="viewer-bar">
+        <span id="viewer-name" class="viewer-name"></span>
+        <span id="viewer-count" class="muted small"></span>
+        <span class="spacer"></span>
+        <button type="button" id="viewer-prev" class="btn btn-quiet btn-icon" title="Previous (←)" aria-label="Previous"><svg class="ic" aria-hidden="true"><use href="#i-left"></use></svg></button>
+        <button type="button" id="viewer-next" class="btn btn-quiet btn-icon" title="Next (→)" aria-label="Next"><svg class="ic" aria-hidden="true"><use href="#i-right"></use></svg></button>
+        <button type="button" id="viewer-zoom" class="btn btn-quiet" title="Fit or full size">Full size</button>
+        <button type="button" id="viewer-save" class="btn">Save as…</button>
+        <button type="button" id="viewer-close" class="btn btn-primary" title="Close (Esc)">Close</button>
+      </div>
+      <div id="viewer-body" class="viewer-body"></div>
+    </div>
+
+
+    <!-- Account dialog -->
+    <dialog id="account-dialog" class="dialog">
+      <form method="dialog" id="account-form">
+        <h2>Add account</h2>
+        <p class="muted small">
+          Settings come from your mail administrator. The password is stored in Windows Credential
+          Manager, never in the mail database.
+        </p>
+
+        <div class="grid">
+          <label>Your name<input name="display_name" required autocomplete="off" /></label>
+          <label>Email address<input name="email" type="email" required autocomplete="off" /></label>
+
+          <fieldset>
+            <legend>Incoming mail</legend>
+            <label>Protocol</label>
+            <div class="seg" id="protocol-seg">
+              <button type="button" data-protocol="imap">IMAP</button>
+              <button type="button" data-protocol="pop3">POP3</button>
+            </div>
+            <input type="hidden" name="protocol" value="imap" />
+            <p class="muted small" id="protocol-note"></p>
+
+            <label>Server<input name="pop_host" required autocomplete="off" /></label>
+            <label>Username<input name="pop_user" required autocomplete="off" /></label>
+            <label
+              >Security
+              <select name="pop_security">
+                <option value="tls" selected>TLS</option>
+                <option value="starttls">STARTTLS</option>
+                <option value="plain">None — POP3 lab use only</option>
+              </select>
+            </label>
+            <label>Port<input name="pop_port" type="number" value="993" required /></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Outgoing (SMTP)</legend>
+            <label>Server<input name="smtp_host" autocomplete="off" /></label>
+            <label>Username<input name="smtp_user" autocomplete="off" /></label>
+            <label
+              >Security
+              <select name="smtp_security">
+                <option value="starttls" selected>STARTTLS (587)</option>
+                <option value="tls">TLS (465)</option>
+                <option value="plain">None — lab only</option>
+              </select>
+            </label>
+            <label>Port<input name="smtp_port" type="number" value="587" required /></label>
+          </fieldset>
+
+          <label>Password<input name="password" type="password" required /></label>
+
+          <fieldset id="pop3-retention">
+            <legend>Mail on the server (POP3 only)</legend>
+            <label class="row">
+              <input type="checkbox" name="leave_on_server" checked />
+              Leave messages on the server
+            </label>
+            <p class="muted small">
+              Keep this on for a shared mailbox, or your colleagues will stop receiving the mail you
+              download.
+            </p>
+            <label
+              >Delete from server after
+              <input name="delete_after_days" type="number" min="0" placeholder="never" />
+              days</label
+            >
+          </fieldset>
+
+          <label>Signature<textarea name="signature" rows="2"></textarea></label>
+        </div>
+
+        <div id="account-check" class="check-panel" hidden></div>
+        <p id="account-status" class="account-status"></p>
+        <menu class="dialog-actions">
+          <button type="button" id="btn-test" class="btn">Test connection</button>
+          <span class="spacer"></span>
+          <button type="button" id="btn-cancel-account" class="btn btn-quiet">Cancel</button>
+          <button type="button" id="btn-save-account" class="btn btn-primary">Add account</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <!-- Compose dialog -->
+    <dialog id="compose-dialog" class="dialog">
+      <form method="dialog" id="compose-form">
+        <h2 id="compose-title">New message</h2>
+        <div class="grid">
+          <label>From<select name="account_id" id="compose-from"></select></label>
+          <label>To<input name="to" autocomplete="off" placeholder="name@company.com; name@company.com" /></label>
+          <label>Cc<input name="cc" autocomplete="off" /></label>
+          <label>Bcc<input name="bcc" autocomplete="off" /></label>
+          <label>Subject<input name="subject" autocomplete="off" /></label>
+          <label for="compose-body">Message</label>
+          <div class="editor-toolbar" id="editor-toolbar">
+            <button type="button" data-fmt="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+            <button type="button" data-fmt="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+            <button type="button" data-fmt="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+            <span class="editor-sep"></span>
+            <button type="button" data-fmt="insertUnorderedList" title="Bulleted list">&bull; List</button>
+            <button type="button" data-fmt="insertOrderedList" title="Numbered list">1. List</button>
+            <span class="editor-sep"></span>
+            <button type="button" data-fmt="createLink" title="Add a link">Link</button>
+            <button type="button" data-fmt="removeFormat" title="Clear formatting">Clear</button>
+          </div>
+          <div
+            id="compose-body"
+            class="editor"
+            contenteditable="true"
+            role="textbox"
+            aria-multiline="true"
+            aria-label="Message"
+          ></div>
+          <div class="attach-row">
+            <button type="button" id="btn-attach" class="btn">Attach files…</button>
+            <label class="inline-label">Signature</label>
+            <select id="compose-signature" name="signature_id"></select>
+            <span id="attach-summary" class="muted small"></span>
+          </div>
+          <div id="attach-list" class="attach-list"></div>
+        </div>
+        <p id="compose-status" class="account-status"></p>
+        <menu class="dialog-actions">
+          <button type="button" id="btn-cancel-compose" class="btn btn-quiet">Discard</button>
+          <span class="spacer"></span>
+          <button type="button" id="btn-save-draft" class="btn">Save draft</button>
+          <button type="button" id="btn-send-later" class="btn">Send later…</button>
+          <button type="button" id="btn-send" class="btn btn-primary">Send</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="later-dialog" class="dialog">
+      <form method="dialog" id="later-form">
+        <h2>Send later</h2>
+        <p class="muted small">
+          The message is built now and held on this computer until the time you pick, so the app
+          has to be running for it to go out. Nothing is sent from the server on your behalf.
+        </p>
+        <div class="grid">
+          <div class="rule-row">
+            <button type="button" class="btn" data-later="tomorrow-9">Tomorrow 9am</button>
+            <button type="button" class="btn" data-later="monday-9">Monday 9am</button>
+            <button type="button" class="btn" data-later="hour">In an hour</button>
+          </div>
+          <label>Or pick a time<input id="later-when" type="datetime-local" /></label>
+        </div>
+        <p id="later-status" class="account-status"></p>
+        <menu class="dialog-actions">
+          <span class="spacer"></span>
+          <button type="button" id="btn-cancel-later" class="btn btn-quiet">Cancel</button>
+          <button type="button" id="btn-confirm-later" class="btn btn-primary">Schedule</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <!-- Team dialog -->
+    <dialog id="team-dialog" class="dialog">
+      <form method="dialog" id="team-form">
+        <h2>Sales team</h2>
+        <p class="muted small">
+          Who mail can be assigned to. Each person gets a colour and initials that appear on every
+          message they are handling.
+        </p>
+        <div class="grid">
+          <div id="team-list" class="team-list"></div>
+
+          <fieldset>
+            <legend>Add someone</legend>
+            <div class="rule-row">
+              <input name="name" placeholder="Name" autocomplete="off" />
+              <input name="email" placeholder="Email address" autocomplete="off" />
+              <button type="button" id="btn-add-member" class="btn btn-primary">Add</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Sharing across the team</legend>
+            <p class="muted small">
+              POP3 keeps no shared state, so assignments travel through a file every machine can
+              reach — a network share or a synced folder. Point every copy of the app at the same
+              path. Leave it empty to keep everything on this computer only.
+            </p>
+            <label
+              >Shared team file
+              <input
+                name="shared_path"
+                placeholder="\\server\share\signet\team-state.json"
+                autocomplete="off"
+              />
+            </label>
+            <div class="rule-row">
+              <button type="button" id="btn-sync-team" class="btn">Sync team state now</button>
+              <span id="team-sync-status" class="muted small"></span>
+            </div>
+          </fieldset>
+        </div>
+        <p id="team-status" class="account-status"></p>
+        <menu class="dialog-actions">
+          <span class="spacer"></span>
+          <button type="button" id="btn-close-team" class="btn btn-primary">Done</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <!-- Settings dialog -->
+    <dialog id="settings-dialog" class="dialog">
+      <form method="dialog" id="settings-form">
+        <h2>Settings</h2>
+        <div class="grid">
+          <label>Account<select id="settings-account"></select></label>
+
+          <fieldset>
+            <legend>Identity</legend>
+            <label>Your name<input name="display_name" autocomplete="off" /></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Password</legend>
+            <p class="muted small">
+              Changed your mail password? Enter the new one. It is checked with the server first and
+              kept in Windows Credential Manager, never in the app's files.
+            </p>
+            <label>New password<input type="password" id="settings-password" autocomplete="new-password" /></label>
+            <div class="rule-row">
+              <button type="button" id="btn-change-password" class="btn">Check and save password</button>
+              <span id="password-status" class="muted small"></span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Signatures</legend>
+            <p class="muted small">
+              Saved signatures are shared by every account. The default is inserted automatically
+              when you start a new message; you can pick a different one, or none, while composing.
+            </p>
+            <div id="signature-list" class="team-list"></div>
+            <label>Name<input id="sig-name" placeholder="e.g. Formal, Short, Arabic" autocomplete="off" /></label>
+            <label
+              >Signature text
+              <textarea id="sig-body" rows="5" placeholder="Your Name&#10;Company&#10;+1 555 0100"></textarea>
+            </label>
+            <div class="rule-row">
+              <button type="button" id="btn-save-signature" class="btn btn-primary">Save signature</button>
+              <button type="button" id="btn-new-signature" class="btn btn-quiet">Clear</button>
+              <span id="sig-status" class="muted small"></span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Mail on the server</legend>
+            <label class="row">
+              <input type="checkbox" name="leave_on_server" /> Leave messages on the server
+            </label>
+            <label
+              >Delete from server after
+              <input name="delete_after_days" type="number" min="0" placeholder="never" /> days</label
+            >
+            <label
+              >Check for new mail every
+              <input name="poll_minutes" type="number" min="1" max="1440" /> minutes</label
+            >
+          </fieldset>
+
+          <fieldset>
+            <legend>Junk filter</legend>
+            <label class="row">
+              <input type="checkbox" name="junk_filter_enabled" /> Move suspected junk to the Junk
+              folder
+            </label>
+            <label
+              >Sensitivity
+              <input name="junk_threshold" type="range" min="0.5" max="0.99" step="0.01" />
+            </label>
+            <span id="junk-threshold-label" class="muted small"></span>
+            <p class="muted small" id="junk-corpus-note"></p>
+          </fieldset>
+
+          <label class="row"><input type="checkbox" name="is_enabled" /> Account is active</label>
+        </div>
+        <p id="settings-status" class="account-status"></p>
+        <menu class="dialog-actions">
+          <button type="button" id="btn-delete-account" class="btn btn-danger">Remove account</button>
+          <span class="spacer"></span>
+          <button type="button" id="btn-cancel-settings" class="btn btn-quiet">Cancel</button>
+          <button type="button" id="btn-save-settings" class="btn btn-primary">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <!-- Rules dialog -->
+    <dialog id="rules-dialog" class="dialog">
+      <form method="dialog" id="rules-form">
+        <h2>Rules</h2>
+        <p class="muted small">
+          Rules run on new mail as it arrives, in order, before the junk filter. Nothing is deleted
+          outright — "Delete" moves to Deleted Items.
+        </p>
+        <div class="grid">
+          <label>Account<select id="rules-account"></select></label>
+          <div id="rules-list" class="rules-list"></div>
+
+          <fieldset>
+            <legend>Add a rule</legend>
+            <label>Name<input name="name" autocomplete="off" placeholder="e.g. Newsletters" /></label>
+            <div class="rule-row">
+              <select name="field">
+                <option value="from">From</option>
+                <option value="to">To</option>
+                <option value="cc">Cc</option>
+                <option value="subject">Subject</option>
+                <option value="body">Body</option>
+                <option value="any">Anywhere</option>
+              </select>
+              <select name="op">
+                <option value="contains">contains</option>
+                <option value="not_contains">does not contain</option>
+                <option value="equals">is exactly</option>
+                <option value="starts_with">starts with</option>
+                <option value="ends_with">ends with</option>
+              </select>
+              <input name="value" placeholder="text to match" autocomplete="off" />
+            </div>
+            <div class="rule-row">
+              <select name="action">
+                <option value="archive">Move to Archive</option>
+                <option value="junk">Move to Junk</option>
+                <option value="deleted">Move to Deleted Items</option>
+                <option value="mark_read">Mark as read</option>
+                <option value="flag">Flag it</option>
+                <option value="never_junk">Never treat as junk</option>
+              </select>
+              <button type="button" id="btn-add-rule" class="btn btn-primary">Add rule</button>
+            </div>
+          </fieldset>
+        </div>
+        <p id="rules-status" class="account-status"></p>
+        <menu class="dialog-actions">
+          <button type="button" id="btn-apply-rules" class="btn">Apply to existing mail</button>
+          <span class="spacer"></span>
+          <button type="button" id="btn-close-rules" class="btn btn-primary">Done</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="junk-dialog" class="dialog">
+      <form method="dialog" id="junk-form">
+        <h2>Junk options</h2>
+        <p class="muted small">
+          These lists are decisions, not guesses, so they beat everything else the filter works
+          out — including when the filter itself is switched off. Enter a full address, or a bare
+          domain to cover everyone there.
+        </p>
+        <div class="grid">
+          <fieldset>
+            <legend>Add a sender</legend>
+            <div class="rule-row">
+              <input
+                name="pattern"
+                autocomplete="off"
+                placeholder="buyer@customer.test or customer.test"
+              />
+              <button type="button" id="btn-junk-allow" class="btn">Always deliver</button>
+              <button type="button" id="btn-junk-block" class="btn btn-danger">Always file</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Blocked senders</legend>
+            <div id="junk-blocked" class="rules-list"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Safe senders</legend>
+            <div id="junk-allowed" class="rules-list"></div>
+          </fieldset>
+        </div>
+        <p id="junk-status" class="account-status"></p>
+        <menu class="dialog-actions">
+          <span class="spacer"></span>
+          <button type="button" id="btn-close-junk" class="btn btn-primary">Done</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="pst-dialog" class="dialog">
+      <form method="dialog" id="pst-form">
+        <h2>Import from Outlook</h2>
+        <p class="muted small" id="pst-summary"></p>
+        <div class="grid">
+          <fieldset>
+            <legend>Where should it go?</legend>
+            <label class="row">
+              <input type="radio" name="pst_target" value="new" checked />
+              <span
+                >A separate mailbox of its own —
+                <span class="muted small"
+                  >keeps an old archive out of the way of live mail. It never syncs and nothing can
+                  be sent from it.</span
+                ></span
+              >
+            </label>
+            <label>Name it<input id="pst-archive-name" autocomplete="off" /></label>
+            <label class="row">
+              <input type="radio" name="pst_target" value="existing" />
+              <span>Merge into an account you already have</span>
+            </label>
+            <label>Account<select id="pst-account"></select></label>
+          </fieldset>
+          <fieldset>
+            <legend>Folders in this file</legend>
+            <div id="pst-folders" class="rules-list"></div>
+          </fieldset>
+          <p class="muted small">
+            Nothing in Outlook is changed or deleted. Mail already here is skipped, and the junk
+            filter is not applied to imported mail. Outlook stores calendar items, contacts and
+            tasks in the same file; those are not mail and are left behind.
+          </p>
+        </div>
+        <p id="pst-status" class="account-status"></p>
+        <menu class="dialog-actions">
+          <span class="spacer"></span>
+          <button type="button" id="btn-cancel-pst" class="btn btn-quiet">Cancel</button>
+          <button type="button" id="btn-run-pst" class="btn btn-primary">Import</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
