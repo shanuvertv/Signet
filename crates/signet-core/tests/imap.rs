@@ -599,3 +599,55 @@ async fn a_mistyped_recipient_is_refused_before_anything_is_sent() {
     assert!(err.contains("janice at alliance"), "{err}");
     assert!(app.scheduled_messages().unwrap().is_empty(), "it was queued anyway");
 }
+
+/// The reported failure: a picture put into the body did not arrive. Sent through a real server,
+/// then read back from the recipient's own mailbox.
+#[tokio::test]
+async fn a_picture_in_the_body_arrives_in_the_recipients_copy() {
+    let s = server_or_skip!();
+    let dir = TempDir::new("picture");
+    let app = App::open(&dir.0).unwrap();
+    let a = app
+        .add_account(
+            NewAccount {
+                smtp_host: s.host.clone(),
+                smtp_port: 3025,
+                smtp_security: Security::Plain,
+                smtp_user: s.user.clone(),
+                ..account(&s)
+            },
+            &s.password,
+        )
+        .unwrap();
+
+    let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+    let to = format!("pictures{}@alliance.example", std::process::id());
+    app.send(signet_core::outbox::Draft {
+        account_id: a,
+        to: vec![to.clone()],
+        subject: "screenshot attached inline".into(),
+        body_text: "See the screenshot.".into(),
+        body_html: Some(format!(r#"<p>See the screenshot.</p><img src="data:image/png;base64,{png}">"#)),
+        ..Default::default()
+    })
+    .await
+    .expect("send");
+
+    let account = app.list_accounts().unwrap().into_iter().find(|x| x.id == a).unwrap();
+    let mut client = signet_net::imap::ImapClient::connect(&signet_sync::imap_config_for(&account), &to, &to, true)
+        .await
+        .expect("recipient mailbox");
+    let listed = client.list_messages("INBOX").await.unwrap();
+    assert_eq!(listed.len(), 1);
+    let mut raw = Vec::new();
+    client.fetch_message("INBOX", listed[0].uid, &mut raw).await.unwrap();
+    client.logout().await.unwrap();
+
+    let parsed = signet_mime::parse(&raw).expect("parse the received copy");
+    let html = parsed.body_html.unwrap_or_default();
+    let picture = parsed.attachments.iter().find(|p| p.is_inline).expect("no inline picture arrived");
+    let cid = picture.content_id.clone().unwrap_or_default();
+    assert!(html.contains(&format!("cid:{cid}")), "the body does not point at the picture: {html}");
+    assert!(!html.contains("data:image"), "sent as a data: URI, which mail programs block");
+    assert_eq!(picture.mime_type, "image/png");
+}

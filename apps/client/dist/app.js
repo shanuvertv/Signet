@@ -1718,14 +1718,83 @@ function wireEditorToolbar() {
   });
 
   // Paste as text by default. Pasting from a browser otherwise drags in the source page's fonts,
-  // colours and background, and the reply arrives looking like a web page.
+  // colours and background, and the reply arrives looking like a web page. Pictures are the
+  // exception: a screenshot, or a picture copied with its text, goes in as a picture. Converting
+  // everything to text used to throw them away without a word.
   editor().addEventListener('paste', (e) => {
-    if (e.clipboardData?.types.includes('text/html') && !e.shiftKey) {
+    const data = e.clipboardData;
+    if (!data) return;
+    const pictures = pictureFiles(data.files);
+    const html = data.types.includes('text/html') ? data.getData('text/html') : '';
+    // A copy from Word or a web page brings its own pictures only if its HTML had any; this keeps
+    // the image some programs add of the copied text itself from being pasted as a picture.
+    const wanted = pictures.length && (!html || /<img/i.test(html)) ? pictures : [];
+    if ((html && !e.shiftKey) || wanted.length) {
       e.preventDefault();
-      const text = e.clipboardData.getData('text/plain');
-      document.execCommand('insertText', false, text);
+      if (html && !e.shiftKey) document.execCommand('insertText', false, data.getData('text/plain'));
+      insertPictures(wanted);
     }
   });
+
+  // Dragged in from Explorer or another window: dropped where the pointer is.
+  editor().addEventListener('dragover', (e) => {
+    if ([...(e.dataTransfer?.items ?? [])].some((i) => i.type.startsWith('image/'))) e.preventDefault();
+  });
+  editor().addEventListener('drop', (e) => {
+    const pictures = pictureFiles(e.dataTransfer?.files);
+    if (!pictures.length) return;
+    e.preventDefault();
+    const at = document.caretRangeFromPoint?.(e.clientX, e.clientY);
+    if (at) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(at);
+    }
+    insertPictures(pictures);
+  });
+
+  // The Picture button. The caret is remembered on press, because the file dialog takes focus
+  // away from the editor and the picture would otherwise land at the top of the message.
+  let caret = null;
+  $('btn-insert-picture').addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const sel = window.getSelection();
+    caret = sel.rangeCount && editor().contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
+  });
+  $('btn-insert-picture').addEventListener('click', () => $('picture-input').click());
+  $('picture-input').addEventListener('change', async (e) => {
+    const files = pictureFiles(e.target.files);
+    e.target.value = '';
+    editor().focus();
+    if (caret) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(caret);
+    }
+    await insertPictures(files);
+  });
+}
+
+/// The picture formats every mail program can show. Anything else is left for Attach files.
+const PICTURE_TYPES = /^image\/(png|jpeg|gif|webp|bmp)$/;
+
+function pictureFiles(list) {
+  return [...(list ?? [])].filter((f) => PICTURE_TYPES.test(f.type));
+}
+
+/// Put pictures at the caret as embedded images. Sending turns each into an inline part of the
+/// message, the way Outlook sends them, so the recipient sees them in the body.
+async function insertPictures(files) {
+  for (const file of files) {
+    const url = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+    document.execCommand('insertHTML', false, `<img src="${url}" alt="${esc(file.name || 'picture')}">`);
+  }
+  if (files.length) state.composeDirty = true;
 }
 
 // ---------------------------------------------------------------- contacts

@@ -180,3 +180,74 @@ test('several recipients, including names pasted from Outlook, reach the core as
     await close();
   }
 });
+
+// A 1x1 PNG.
+const PNG_B64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+async function newMessage(page) {
+  await page.click('#btn-compose');
+  await page.waitForSelector('#compose-body', { state: 'visible' });
+  await page.fill('#compose-form [name="to"]', 'a@x.org');
+  await page.click('#compose-body');
+}
+
+async function sentHtml(page) {
+  await page.click('#btn-send');
+  await page.waitForTimeout(150);
+  const sent = await calls(page, 'send');
+  assert.ok(sent.length, 'nothing was sent');
+  return sent[sent.length - 1].args.draft.body_html ?? '';
+}
+
+test('a picture inserted with the Picture button is in the message that is sent', async () => {
+  const { page, close } = await openApp();
+  try {
+    await newMessage(page);
+    await page.setInputFiles('#picture-input', {
+      name: 'screenshot.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(PNG_B64, 'base64'),
+    });
+    await page.waitForSelector('#compose-body img');
+    assert.match(await sentHtml(page), /<img src="data:image\/png;base64,/);
+  } finally {
+    await close();
+  }
+});
+
+test('a pasted screenshot goes in as a picture, a pasted page as text only', async () => {
+  const { page, close } = await openApp();
+  try {
+    await newMessage(page);
+    const paste = (withHtml) =>
+      page.evaluate(
+        async ([b64, withHtml]) => {
+          const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+          const dt = new DataTransfer();
+          dt.items.add(new File([bytes], 'image.png', { type: 'image/png' }));
+          if (withHtml) {
+            dt.setData('text/html', '<p style="color:red">copied <b>text</b></p>');
+            dt.setData('text/plain', 'copied text');
+          }
+          document
+            .getElementById('compose-body')
+            .dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+          await new Promise((r) => setTimeout(r, 100));
+          return document.getElementById('compose-body').innerHTML;
+        },
+        [PNG_B64, withHtml],
+      );
+
+    // Text copied from Word or a page: the picture some programs add of the text is not pasted.
+    let html = await paste(true);
+    assert.ok(html.includes('copied text'), html);
+    assert.ok(!html.includes('<img'), `a picture of the copied text was pasted: ${html}`);
+
+    // A screenshot on the clipboard: pasted as a picture.
+    html = await paste(false);
+    assert.ok(html.includes('src="data:image/png;base64,'), `screenshot lost: ${html}`);
+  } finally {
+    await close();
+  }
+});

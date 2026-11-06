@@ -223,37 +223,53 @@ pub fn build_message(
         .message_id(message_id(from_addr))
         .subject(draft.subject.clone());
 
+    // Pictures in the body travel as parts of the message, referenced by `cid:`. Left as `data:`
+    // URIs they are blocked by Outlook and Gmail, and the recipient sees an empty frame.
+    let (html_body, pictures) = match html_body {
+        Some(html) => {
+            let (html, pictures) = embed_pictures(&html, from_addr)?;
+            (Some(html), pictures)
+        }
+        None => (None, Vec::new()),
+    };
+    let mut total: u64 = pictures.iter().map(|p| p.data.len() as u64).sum();
+
     // `multipart/alternative` when both exist: the text part is what a client without HTML shows,
-    // and its absence is something several spam filters score against.
-    let body_part = || match &html_body {
-        Some(html) => MimePart::new(
-            "multipart/alternative",
-            vec![
-                MimePart::new("text/plain", body.clone()),
-                MimePart::new("text/html", html.clone()),
-            ],
-        ),
+    // and its absence is something several spam filters score against. The HTML is wrapped in
+    // `multipart/related` with its pictures when it has any, which is how Outlook sends them.
+    let body_part = match html_body {
+        Some(html) => {
+            let html_part = if pictures.is_empty() {
+                MimePart::new("text/html", html)
+            } else {
+                let mut related = vec![MimePart::new("text/html", html)];
+                related.extend(pictures.into_iter().map(|p| {
+                    MimePart::new(p.mime, p.data).inline().cid(p.cid)
+                }));
+                MimePart::new("multipart/related", related)
+            };
+            MimePart::new(
+                "multipart/alternative",
+                vec![MimePart::new("text/plain", body.clone()), html_part],
+            )
+        }
         None => MimePart::new("text/plain", body.clone()),
     };
 
     if draft.attachments.is_empty() {
-        builder = match &html_body {
-            Some(html) => builder.text_body(body.clone()).html_body(html.clone()),
-            None => builder.text_body(body.clone()),
-        };
+        if total > MAX_ATTACHMENT_TOTAL {
+            return Err(too_large());
+        }
+        builder = builder.body(body_part);
     } else {
         // multipart/mixed: the body first, then each file.
-        let mut parts = vec![body_part()];
-        let mut total = 0u64;
+        let mut parts = vec![body_part];
         for att in &draft.attachments {
             let data = std::fs::read(&att.path)
                 .map_err(|e| Error::Parse(format!("could not read {}: {e}", att.path)))?;
             total += data.len() as u64;
             if total > MAX_ATTACHMENT_TOTAL {
-                return Err(Error::Parse(format!(
-                    "attachments total more than {} MB, which most servers refuse",
-                    MAX_ATTACHMENT_TOTAL / (1024 * 1024)
-                )));
+                return Err(too_large());
             }
             let name = signet_mime::safe_filename(&att.filename);
             parts.push(MimePart::new(guess_mime(&name), data).attachment(name));
@@ -277,6 +293,79 @@ pub fn build_message(
     builder
         .write_to_vec()
         .map_err(|e| Error::Parse(format!("could not build message: {e}")))
+}
+
+fn too_large() -> Error {
+    Error::Parse(format!(
+        "attachments and pictures total more than {} MB, which most servers refuse",
+        MAX_ATTACHMENT_TOTAL / (1024 * 1024)
+    ))
+}
+
+/// A picture taken out of the HTML body to travel as its own part.
+struct Picture {
+    cid: String,
+    mime: &'static str,
+    data: Vec<u8>,
+}
+
+/// Replace every `src="data:image/...;base64,..."` in `html` with a `cid:` reference and return
+/// the pictures to attach beside it. The same picture pasted twice becomes one part.
+///
+/// The HTML is the composer's own serialisation, so attributes are always double-quoted and a
+/// `data:` URI never contains a quote. Only raster formats are taken; anything else is left as it
+/// was rather than guessed at.
+fn embed_pictures(html: &str, from_addr: &str) -> Result<(String, Vec<Picture>)> {
+    const MARK: &str = "src=\"data:image/";
+    let mut out = String::with_capacity(html.len());
+    let mut pictures: Vec<(String, Picture)> = Vec::new();
+    let mut rest = html;
+
+    while let Some(at) = rest.find(MARK) {
+        let uri_start = at + "src=\"".len();
+        let Some(len) = rest[uri_start..].find('"') else {
+            break;
+        };
+        let uri = &rest[uri_start..uri_start + len];
+        let Some(picture) = decode_picture(uri) else {
+            // Not one we embed: copy through untouched and keep looking after it.
+            out.push_str(&rest[..uri_start + len]);
+            rest = &rest[uri_start + len..];
+            continue;
+        };
+
+        let cid = match pictures.iter().find(|(u, _)| u == uri) {
+            Some((_, existing)) => existing.cid.clone(),
+            None => {
+                let cid = format!("picture{}.{}", pictures.len() + 1, message_id(from_addr));
+                pictures.push((uri.to_string(), Picture { cid: cid.clone(), ..picture }));
+                cid
+            }
+        };
+        out.push_str(&rest[..at]);
+        out.push_str(&format!("src=\"cid:{cid}"));
+        rest = &rest[uri_start + len..];
+    }
+    out.push_str(rest);
+
+    fn decode_picture(uri: &str) -> Option<Picture> {
+        use base64::Engine;
+        let (head, payload) = uri.strip_prefix("data:")?.split_once(',')?;
+        let mime = match head.strip_suffix(";base64")? {
+            "image/png" => "image/png",
+            "image/jpeg" | "image/jpg" => "image/jpeg",
+            "image/gif" => "image/gif",
+            "image/webp" => "image/webp",
+            "image/bmp" => "image/bmp",
+            _ => return None,
+        };
+        let data = base64::engine::general_purpose::STANDARD
+            .decode(payload.trim())
+            .ok()?;
+        Some(Picture { cid: String::new(), mime, data })
+    }
+
+    Ok((out, pictures.into_iter().map(|(_, p)| p).collect()))
 }
 
 /// Queue a draft for sending and write its raw form to disk.
@@ -597,6 +686,44 @@ mod tests {
         let raw = String::from_utf8(build_message(&draft(), "Dev", "dev@example.com", "").unwrap()).unwrap();
         let id = raw.lines().find(|l| l.starts_with("Message-ID:")).unwrap();
         assert!(id.ends_with("@example.com>"), "{id}");
+    }
+
+    #[test]
+    fn a_picture_in_the_body_travels_as_an_inline_part_not_a_data_uri() {
+        // Outlook and Gmail block `data:` images, so a pasted screenshot arrived as an empty frame.
+        let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+        let d = Draft {
+            account_id: 1,
+            to: vec!["a@x.org".into()],
+            subject: "picture".into(),
+            body_text: "see below".into(),
+            body_html: Some(format!(
+                r#"<p>see below</p><img src="data:image/png;base64,{png}"><img src="data:image/png;base64,{png}">"#
+            )),
+            ..Default::default()
+        };
+        let raw = build_message(&d, "Dev", "dev@example.com", "").unwrap();
+        let text = String::from_utf8_lossy(&raw);
+        assert!(!text.contains("data:image"), "a data: URI went out");
+        assert!(text.contains("multipart/related"), "{text}");
+        // And a mail client sees the picture as an inline part of the message. Checked on the
+        // decoded HTML: on the wire it is quoted-printable, where `=` is written `=3D`.
+        let parsed = signet_mime::parse(&raw).expect("parse");
+        let html = parsed.body_html.as_deref().unwrap_or("");
+        assert_eq!(html.matches("src=\"cid:picture1.").count(), 2, "both references not rewritten: {html}");
+        assert!(!html.contains("picture2."), "the same picture was attached twice");
+        let inline: Vec<_> = parsed.attachments.iter().filter(|a| a.is_inline).collect();
+        assert_eq!(inline.len(), 1, "{:?}", parsed.attachments.iter().map(|a| &a.filename).collect::<Vec<_>>());
+        assert_eq!(inline[0].mime_type, "image/png");
+        assert!(inline[0].content_id.as_deref().unwrap_or("").starts_with("picture1."));
+    }
+
+    #[test]
+    fn a_body_without_pictures_is_unchanged_and_non_raster_data_is_left_alone() {
+        let html = r#"<p>hi</p><img src="data:image/svg+xml;base64,PHN2Zz4="><img src="https://x.org/a.png">"#;
+        let (out, pictures) = embed_pictures(html, "dev@example.com").unwrap();
+        assert_eq!(out, html);
+        assert!(pictures.is_empty());
     }
 
     #[test]

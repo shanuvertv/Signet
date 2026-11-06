@@ -600,3 +600,61 @@ fn adding_an_existing_mailbox_again_is_refused_without_touching_its_password() {
     let kept = signet_auth::load(&account.credential_handle).expect("the password was deleted");
     assert_eq!(kept.expose(), "password");
 }
+
+#[test]
+fn a_reply_quotes_the_originals_pictures_and_sends_them_to_the_recipient() {
+    use signet_store::NewAttachment;
+
+    let (dir, app, account_id) = app_with_account("replypics");
+    let png: &[u8] = &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, 4];
+    let blob = dir.0.join("logo.png");
+    std::fs::write(&blob, png).unwrap();
+    let raw = dir.0.join("original.eml");
+    let html = r#"<p>Our new catalogue:</p><img src="cid:logo@supplier.example"><img src="https://supplier.example/banner.png">"#;
+    std::fs::write(
+        &raw,
+        format!(
+            "From: Supplier <s@supplier.example>\r\nTo: dev@example.com\r\nSubject: Catalogue\r\n\
+             Message-ID: <cat@supplier.example>\r\nMIME-Version: 1.0\r\n\
+             Content-Type: text/html; charset=utf-8\r\n\r\n{html}\r\n"
+        ),
+    )
+    .unwrap();
+
+    let folder = app.store().folder_id(account_id, FolderKind::Inbox).unwrap();
+    let id = app
+        .store()
+        .insert_message(&NewMessage {
+            account_id,
+            folder_id: folder,
+            rfc822_message_id: Some("<cat@supplier.example>".into()),
+            from_addr: "s@supplier.example".into(),
+            subject: "Catalogue".into(),
+            // What is stored: remote image removed, inline one still a cid: reference.
+            body_html: Some(r#"<p>Our new catalogue:</p><img src="cid:logo@supplier.example">"#.into()),
+            body_text: "Our new catalogue:".into(),
+            raw_path: raw.to_string_lossy().into(),
+            attachments: vec![NewAttachment {
+                filename: "logo.png".into(),
+                mime_type: "image/png".into(),
+                size_bytes: png.len() as i64,
+                content_id: Some("logo@supplier.example".into()),
+                blob_path: blob.to_string_lossy().into(),
+                is_inline: true,
+            }],
+            ..Default::default()
+        })
+        .unwrap();
+
+    let draft = app.reply_draft(id, false).unwrap();
+    let quoted = draft.body_html.clone().unwrap();
+    assert!(quoted.contains("data:image/png;base64,"), "inline picture not shown in the reply: {quoted}");
+    assert!(!quoted.contains("cid:"), "a cid: reference the reply cannot resolve: {quoted}");
+    assert!(quoted.contains("https://supplier.example/banner.png"), "remote picture dropped: {quoted}");
+
+    let sent = signet_core::outbox::build_message(&draft, "Dev", "dev@example.com", "").unwrap();
+    let parsed = signet_mime::parse(&sent).unwrap();
+    let inline: Vec<_> = parsed.attachments.iter().filter(|a| a.is_inline).collect();
+    assert_eq!(inline.len(), 1, "the quoted picture did not travel with the reply");
+    assert_eq!(inline[0].data, png);
+}

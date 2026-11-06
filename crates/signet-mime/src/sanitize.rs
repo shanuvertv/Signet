@@ -129,9 +129,18 @@ pub fn sanitize(html: &str, allow_remote: bool) -> SanitizedHtml {
         .tags(tags)
         .tag_attributes(attrs)
         .link_rel(Some("noopener noreferrer nofollow"))
-        // Anything not listed here — javascript:, vbscript:, data:, file: — is dropped.
-        .url_schemes(["http", "https", "mailto", "cid"].into_iter().collect())
+        // Anything not listed here — javascript:, vbscript:, file: — is dropped. `data:` is let
+        // through the scheme check only so the filter below can keep embedded pictures.
+        .url_schemes(["http", "https", "mailto", "cid", "data"].into_iter().collect())
         .attribute_filter(move |element, attribute, value| {
+            // `data:` survives in exactly one place: a raster picture in an `img`. That is how a
+            // pasted screenshot or an inline image is held in a draft, a Sent copy and a quote.
+            // Everywhere else, and as SVG (which can carry script), it is a way to smuggle a
+            // document in, so it goes.
+            if value.trim_start().get(..5).is_some_and(|p| p.eq_ignore_ascii_case("data:")) {
+                return (element == "img" && attribute == "src" && is_raster_data_uri(value))
+                    .then(|| value.into());
+            }
             if element == "img" && attribute == "src" {
                 let remote = is_remote(value);
                 if remote {
@@ -189,6 +198,14 @@ fn clean_style(style: &str, allow_remote: bool) -> (String, bool) {
         })
         .collect();
     (kept.join(";"), had_url)
+}
+
+/// A base64 PNG, JPEG, GIF, WebP or BMP. Nothing that can hold markup or script.
+fn is_raster_data_uri(value: &str) -> bool {
+    let v = value.trim_start().to_ascii_lowercase();
+    ["png", "jpeg", "jpg", "gif", "webp", "bmp"]
+        .iter()
+        .any(|t| v.starts_with(&format!("data:image/{t};base64,")))
 }
 
 fn is_remote(url: &str) -> bool {
@@ -384,6 +401,22 @@ mod tests {
         let out = sanitize(evil, true);
         assert!(!out.html.contains("expression"), "{}", out.html);
         assert!(out.html.contains("color:red"));
+    }
+
+    #[test]
+    fn embedded_pictures_survive_but_data_documents_do_not() {
+        let png = r#"<img src="data:image/png;base64,iVBORw0KGgo=">"#;
+        assert!(sanitize(png, false).html.contains("data:image/png;base64,"), "pasted picture lost");
+        // Not counted as remote content: it is already in the message.
+        assert!(!sanitize(png, false).had_remote_content);
+
+        for evil in [
+            r#"<img src="data:image/svg+xml;base64,PHN2Zz4=">"#,
+            r#"<a href="data:text/html;base64,PHNjcmlwdD4=">x</a>"#,
+            r#"<img src="data:text/html,<script>alert(1)</script>">"#,
+        ] {
+            assert!(!sanitize(evil, true).html.contains("data:"), "survived: {evil}");
+        }
     }
 
     #[test]

@@ -600,6 +600,25 @@ impl App {
         Ok(detail)
     }
 
+    /// A message as it should appear quoted in a reply or forward: its own pictures shown, and its
+    /// remote images kept as links.
+    ///
+    /// The stored copy will not do. Its remote images were removed so that reading it could not
+    /// tell the sender anything, and its embedded pictures are `cid:` references to parts of the
+    /// original that a reply does not carry; quoted from that copy, every picture arrived broken.
+    /// Inline pictures become `data:` here, and sending turns them back into parts of the new
+    /// message (`outbox::build_message`), so the recipient sees what was quoted.
+    fn message_for_quote(&self, id: i64) -> Result<MessageDetail> {
+        let mut detail = self.store.get_message(id)?;
+        if let Ok(raw) = std::fs::read(self.raw_path(id)?) {
+            if let Some(html) = signet_mime::parse(&raw).and_then(|p| p.body_html) {
+                detail.body_html = Some(signet_mime::sanitize(&html, true).html);
+            }
+        }
+        inline::resolve_cid_images(&self.store, &mut detail);
+        Ok(detail)
+    }
+
     fn raw_path(&self, message_id: i64) -> Result<PathBuf> {
         Ok(PathBuf::from(self.store.raw_path(message_id)?))
     }
@@ -953,7 +972,7 @@ impl App {
     /// the original is a classic way to leak a thread to the wrong person. Attachments are carried
     /// over, because a forward without them is usually pointless.
     pub fn forward_draft(&self, message_id: i64) -> Result<Draft> {
-        let m = self.store.get_message(message_id)?;
+        let m = self.message_for_quote(message_id)?;
 
         let subject = if m.subject.to_ascii_lowercase().starts_with("fw:")
             || m.subject.to_ascii_lowercase().starts_with("fwd:")
@@ -962,32 +981,6 @@ impl App {
         } else {
             format!("Fwd: {}", m.subject)
         };
-
-        let to_line = m
-            .recipients
-            .iter()
-            .filter(|r| r.kind == "to")
-            .map(|r| r.addr.clone())
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        // The conventional forwarded-message header, so the recipient can see where it came
-        // from and who was originally on it.
-        let body = format!(
-            concat!(
-                "\r\n\r\n---------- Forwarded message ----------\r\n",
-                "From: {} <{}>\r\n",
-                "Date: {}\r\n",
-                "Subject: {}\r\n",
-                "To: {}\r\n\r\n{}"
-            ),
-            m.from_name,
-            m.from_addr,
-            format_date(m.date_utc),
-            m.subject,
-            to_line,
-            m.body_text
-        );
 
         // Copy the stored attachment blobs so the forward carries them even if the original is
         // later deleted.
@@ -1005,7 +998,6 @@ impl App {
         }
 
         let bodies = crate::reply::forward_body(&m, &format_date(m.date_utc));
-        let _ = body;
 
         Ok(Draft {
             account_id: m.account_id,
@@ -1025,7 +1017,7 @@ impl App {
 
     /// Build a reply draft from an existing message.
     pub fn reply_draft(&self, message_id: i64, reply_all: bool) -> Result<Draft> {
-        let m = self.store.get_message(message_id)?;
+        let m = self.message_for_quote(message_id)?;
         let account = self.store.get_account(m.account_id)?;
 
         let mut to = vec![m.from_addr.clone()];

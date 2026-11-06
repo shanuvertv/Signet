@@ -4007,7 +4007,7 @@ dependencies = [
 
 [[package]]
 name = "signet-app"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -4026,7 +4026,7 @@ dependencies = [
 
 [[package]]
 name = "signet-auth"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "keyring",
  "thiserror 2.0.20",
@@ -4035,7 +4035,7 @@ dependencies = [
 
 [[package]]
 name = "signet-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -4051,7 +4051,7 @@ dependencies = [
 
 [[package]]
 name = "signet-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.23.1",
  "chrono",
@@ -4073,7 +4073,7 @@ dependencies = [
 
 [[package]]
 name = "signet-mime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ammonia",
  "mail-builder",
@@ -4083,7 +4083,7 @@ dependencies = [
 
 [[package]]
 name = "signet-net"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-imap",
  "base64 0.23.1",
@@ -4099,7 +4099,7 @@ dependencies = [
 
 [[package]]
 name = "signet-store"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "rusqlite",
  "serde",
@@ -4109,9 +4109,10 @@ dependencies = [
 
 [[package]]
 name = "signet-sync"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
+ "base64 0.23.1",
  "mail-builder",
  "serde",
  "serde_json",
