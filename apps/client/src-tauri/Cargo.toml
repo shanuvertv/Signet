@@ -27,6 +27,7 @@ tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tauri-plugin-notification = "2.3.3"
+tauri-plugin-updater = "2"
 
 [lints]
 workspace = true

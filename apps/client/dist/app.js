@@ -1182,6 +1182,63 @@ async function sendReceiveAccount(id) {
   }
 }
 
+// ---------------------------------------------------------------- updates
+
+async function wireUpdates() {
+  // A build with no release feed (one packaged under its own name) shows no update button.
+  if (!(await invoke('can_update').catch(() => false))) return;
+  $('update-group').hidden = false;
+  $('btn-update').addEventListener('click', () => checkForUpdate(true));
+  await listen('update-progress', (e) =>
+    status(e.payload >= 0 ? `Downloading update… ${e.payload}%` : 'Downloading update…'),
+  );
+  // Quietly once after start-up, then twice a day for a window left open for weeks.
+  setTimeout(() => checkForUpdate(false), 15_000);
+  setInterval(() => checkForUpdate(false), 12 * 3600_000);
+}
+
+/// `asked` is true when somebody pressed the button: only then is "up to date" or a failure worth
+/// saying, and only then does it offer to install.
+async function checkForUpdate(asked) {
+  const btn = $('btn-update');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.classList.add('is-busy');
+  try {
+    let info;
+    try {
+      info = await invoke('check_update');
+    } catch (e) {
+      if (asked) status(`Could not check for updates: ${e}`, true);
+      return;
+    }
+    if (!info) {
+      if (asked) status(`${APP_NAME} is up to date`);
+      return;
+    }
+    $('update-label').innerHTML = `Update to<br />${esc(info.version)}`;
+    document.querySelector('[data-tab="tools"]')?.classList.add('has-update');
+    if (!asked) {
+      status(`${APP_NAME} ${info.version} is available — Tools › Update to install it`);
+      return;
+    }
+    const notes = (info.notes ?? '').replace(/[#*]/g, '').trim().slice(0, 600);
+    const ok = await dialogApi.confirm(
+      `${APP_NAME} ${info.version} is available (you have ${info.current}).\n\n${notes}\n\n` +
+        `${APP_NAME} will close, install it, and open again. Your mail and settings are kept.`,
+      { title: APP_NAME, kind: 'info', okLabel: 'Install and restart', cancelLabel: 'Later' },
+    );
+    if (!ok) return;
+    status('Downloading update…');
+    await invoke('install_update');
+  } catch (e) {
+    status(`Update failed: ${e}`, true);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('is-busy');
+  }
+}
+
 /// Fire desktop notifications for reminders that have come due.
 async function checkReminders() {
   const due = await call('take_due_reminders').catch(() => []);
@@ -3971,6 +4028,8 @@ async function main() {
   };
   drainOutbox();
   setInterval(drainOutbox, 60_000);
+
+  wireUpdates();
 }
 
 main();

@@ -2898,3 +2898,19 @@ button.folder:focus-visible,
   padding: 0 10px;
   font-size: 12px;
 }
+
+/* A dot on the Tools tab when a newer version is waiting. */
+.rtab.has-update::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.rgroup[hidden] {
+  display: none;
+}

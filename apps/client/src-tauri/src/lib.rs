@@ -94,6 +94,60 @@ async fn sync_account(state: tauri::State<'_, AppState>, id: i64) -> CmdResult<S
     state.app.sync_account(id).await.map_err(err)
 }
 
+// ---------------------------------------------------------------- updates
+
+/// Whether this build has somewhere to get updates from. A build packaged with its own name has no
+/// endpoints, and must never take the public release in its place.
+#[tauri::command]
+fn can_update(app: tauri::AppHandle) -> bool {
+    use tauri_plugin_updater::UpdaterExt;
+    app.updater().is_ok()
+}
+
+#[derive(Serialize)]
+struct UpdateInfo {
+    version: String,
+    current: String,
+    notes: Option<String>,
+}
+
+/// Ask the release feed whether there is a newer version. `None` means this is the latest.
+#[tauri::command]
+async fn check_update(app: tauri::AppHandle) -> CmdResult<Option<UpdateInfo>> {
+    use tauri_plugin_updater::UpdaterExt;
+    let update = app.updater().map_err(err)?.check().await.map_err(err)?;
+    Ok(update.map(|u| UpdateInfo {
+        version: u.version.clone(),
+        current: u.current_version.clone(),
+        notes: u.body.clone(),
+    }))
+}
+
+/// Download the newer version, check its signature, and hand over to its installer, which closes
+/// this app and starts the new one. Progress goes out as `update-progress` (0–100, or -1 unknown).
+#[tauri::command]
+async fn install_update(app: tauri::AppHandle) -> CmdResult<()> {
+    use tauri_plugin_updater::UpdaterExt;
+    let Some(update) = app.updater().map_err(err)?.check().await.map_err(err)? else {
+        return Err("Signet is already up to date".into());
+    };
+    let mut got = 0u64;
+    let progress = app.clone();
+    update
+        .download_and_install(
+            move |chunk, total| {
+                got += chunk as u64;
+                let pct = total.filter(|t| *t > 0).map_or(-1, |t| (got * 100 / t) as i64);
+                let _ = progress.emit("update-progress", pct);
+            },
+            || {},
+        )
+        .await
+        .map_err(err)?;
+    // Windows installers end the process themselves; elsewhere start the new version.
+    app.restart();
+}
+
 /// Send/Receive for one mailbox: send its waiting mail, then fetch its new mail.
 #[tauri::command]
 async fn send_receive_account(
@@ -729,6 +783,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|handle| {
             let data_dir = handle
                 .path()
@@ -826,6 +881,9 @@ pub fn run() {
             delete_account,
             sync_account,
             send_receive_account,
+            can_update,
+            check_update,
+            install_update,
             sync_all,
             sync_due,
             list_folders,
