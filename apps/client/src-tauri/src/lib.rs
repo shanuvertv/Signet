@@ -94,6 +94,35 @@ async fn sync_account(state: tauri::State<'_, AppState>, id: i64) -> CmdResult<S
     state.app.sync_account(id).await.map_err(err)
 }
 
+/// Send/Receive for one mailbox: send its waiting mail, then fetch its new mail.
+#[tauri::command]
+async fn send_receive_account(
+    state: tauri::State<'_, AppState>,
+    id: i64,
+) -> CmdResult<SendReceiveOutcome> {
+    let (flush, result) = state.app.send_receive(id).await;
+    let (new_messages, error) = match result {
+        Ok(r) => (r.new_messages, None),
+        Err(e) => (0, Some(e.to_string())),
+    };
+    Ok(SendReceiveOutcome {
+        account_id: id,
+        new_messages,
+        error,
+        sent: flush.sent,
+        send_error: flush.last_error,
+    })
+}
+
+#[derive(Serialize)]
+struct SendReceiveOutcome {
+    account_id: i64,
+    new_messages: usize,
+    error: Option<String>,
+    sent: i64,
+    send_error: Option<String>,
+}
+
 /// Sync whichever accounts are due, per their own polling interval.
 #[tauri::command]
 async fn sync_due(state: tauri::State<'_, AppState>) -> CmdResult<Vec<SyncOutcome>> {
@@ -796,6 +825,7 @@ pub fn run() {
             test_account,
             delete_account,
             sync_account,
+            send_receive_account,
             sync_all,
             sync_due,
             list_folders,

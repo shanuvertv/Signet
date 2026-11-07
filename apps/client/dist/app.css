@@ -363,6 +363,57 @@ textarea {
   font-weight: 400;
   font-size: 10.5px;
   white-space: nowrap;
+  margin-left: auto;
+}
+
+.account-name {
+  align-items: center;
+}
+
+/* Per-mailbox Send/Receive. Quiet until the header is hovered or the button has focus. */
+.acct-sync {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.account-name:hover .acct-sync,
+.acct-sync:focus-visible,
+.acct-sync.is-busy {
+  opacity: 1;
+}
+
+.acct-sync:hover {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.acct-sync .ic {
+  width: 14px;
+  height: 14px;
+}
+
+.acct-sync.is-busy {
+  cursor: progress;
+}
+
+.acct-sync.is-busy .ic {
+  animation: rico-spin 1.1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acct-sync.is-busy .ic {
+    animation: none;
+    opacity: 0.55;
+  }
 }
 
 .folder {

@@ -910,11 +910,30 @@ impl App {
     /// waiting out a network failure are the same job. Called on a timer and after each sync, so a
     /// failure never needs the user to press anything.
     pub async fn flush_outbox(&self) -> Result<OutboxFlush> {
+        self.flush_outbox_for(None).await
+    }
+
+    /// Send/Receive for one mailbox: its waiting messages go first, then its new mail comes in,
+    /// the same order Outlook uses so the Sent copy is there by the time the folders refresh.
+    pub async fn send_receive(&self, account_id: i64) -> (OutboxFlush, Result<SyncReport>) {
+        let flush = self.flush_outbox_for(Some(account_id)).await.unwrap_or_else(|e| OutboxFlush {
+            failed: 1,
+            last_error: Some(e.to_string()),
+            ..Default::default()
+        });
+        (flush, self.sync_account(account_id).await)
+    }
+
+    /// [`Self::flush_outbox`], limited to one account's messages when `account_id` is given.
+    pub async fn flush_outbox_for(&self, account_id: Option<i64>) -> Result<OutboxFlush> {
         let now = signet_store::now_utc();
         let due = self.store.due_outbox(now)?;
         let mut flush = OutboxFlush::default();
 
-        for item in due {
+        for item in due
+            .into_iter()
+            .filter(|i| account_id.is_none_or(|a| i.account_id == a))
+        {
             let Ok(draft) = serde_json::from_str::<Draft>(&item.draft_json) else {
                 // Written before drafts were persisted, or corrupt. Parking it is better than
                 // dropping it: the built message is still on disk and the row still names it.

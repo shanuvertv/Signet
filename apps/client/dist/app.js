@@ -26,6 +26,8 @@ const state = {
   /// The message whose body is on screen, so a theme change can redraw it.
   bodyMessage: null,
   accounts: [],
+  /// Accounts with a Send/Receive running, so a redraw of the folder pane keeps the spinner.
+  syncing: new Set(),
   folders: [],
   team: [],
   me: null,
@@ -259,7 +261,18 @@ function renderFolders() {
         <span class="sync-time">${esc(isArchive ? '' : (account.protocol ?? ''))}${
           isArchive ? '' : ' · '
         }${esc(synced)}</span>
+        ${
+          isArchive
+            ? ''
+            : `<button type="button" class="acct-sync${state.syncing.has(account.id) ? ' is-busy' : ''}"
+                data-account="${account.id}" title="Send/receive ${esc(account.email)}"
+                aria-label="Send and receive ${esc(account.email)}">${icon('sync')}</button>`
+        }
       </div>`;
+    group.querySelector('.acct-sync')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sendReceiveAccount(account.id);
+    });
 
     for (const folder of state.folders.filter((f) => f.account_id === account.id)) {
       const el = document.createElement('button');
@@ -1101,6 +1114,8 @@ async function syncAll() {
   // span, and assigning textContent replaces both of them for the rest of the session.
   btn.classList.add('is-busy');
   try {
+    // Send first, as the button says, rather than leaving the outbox to its timer.
+    await call('flush_outbox').catch(() => null);
     const outcomes = await call('sync_all');
     const total = outcomes.reduce((n, o) => n + o.new_messages, 0);
     const failed = outcomes.filter((o) => o.error);
@@ -1131,6 +1146,39 @@ async function syncAll() {
   } finally {
     btn.disabled = false;
     btn.classList.remove('is-busy');
+  }
+}
+
+/// Send/Receive for one mailbox: send what it has waiting, then fetch its new mail.
+async function sendReceiveAccount(id) {
+  if (state.syncing.has(id)) return;
+  const account = state.accounts.find((a) => a.id === id);
+  const name = account ? account.email : `account ${id}`;
+  state.syncing.add(id);
+  renderFolders();
+  beginProgress(id);
+  try {
+    const o = await call('send_receive_account', { id });
+    finishProgress(id, { error: o.error, newMessages: o.new_messages });
+    const sent = o.sent > 0 ? `${o.sent} sent, ` : '';
+    if (o.error) {
+      status(`${name}: ${sent}receiving failed — ${o.error}`, true);
+    } else if (o.send_error) {
+      status(`${name}: sending failed — ${o.send_error}. It will retry.`, true);
+    } else {
+      const got = o.new_messages > 0
+        ? `${o.new_messages} new message${o.new_messages === 1 ? '' : 's'}`
+        : 'no new mail';
+      status(`${name}: ${sent}${got}`);
+    }
+  } catch (e) {
+    finishProgress(id, { error: String(e), newMessages: 0 });
+    status(`${name}: ${e}`, true);
+  } finally {
+    state.syncing.delete(id);
+    // loadFolders re-reads the accounts too, so "synced …" under the mailbox name moves on.
+    await loadFolders().catch(() => renderFolders());
+    await loadMessages();
   }
 }
 
@@ -2444,6 +2492,16 @@ function wireContextMenu() {
         showContextMenu(e.clientX, e.clientY, messageMenu(m));
         return;
       }
+    }
+
+    const head = e.target.closest?.('.account-name');
+    const sync = head?.querySelector('.acct-sync');
+    if (sync) {
+      const id = Number(sync.dataset.account);
+      showContextMenu(e.clientX, e.clientY, [
+        { id: 'send-receive', icon: 'sync', label: 'Send/receive this mailbox', run: () => sendReceiveAccount(id) },
+      ]);
+      return;
     }
 
     const att = e.target.closest?.('.attachment');
